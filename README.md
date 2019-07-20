@@ -77,6 +77,11 @@ and run `terraform init` to download the required module files.
 | **`amis_by_tag_key_and_value_list`** | list(string) | `[]` | Required AMI tags for EC2 instances |
 | **`desired_instance_types`** | set(string) | `[]` | A set of comma-delimited instance types |
 
+### TODO
+
+- Add a lot of configurable parameters
+- Add some tagging filters
+
 ## vpc
 
 The module builds a VPC with the default CIDR range of `10.0.0.0/16`, three subnets a "public" configuration (attached and routed to an AWS Internet Gateway) and three subnets in a "private" configuration (attached and routed through three separate AWS NAT Gateways). You can specify the following attributes:
