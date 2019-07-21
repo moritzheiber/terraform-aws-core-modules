@@ -5,6 +5,8 @@ This is a collection of Terraform "core" modules I would consider to be building
 ## Available modules
 
 - [config](#config)
+- [iam-users](#iam-users)
+- [iam-resources](#iam-resources)
 - [vpc](#vpc)
 
 ## config
@@ -81,6 +83,74 @@ and run `terraform init` to download the required module files.
 
 - Add a lot of configurable parameters
 - Add some tagging filters
+
+## iam-users
+
+A module to configure the "users" account modeled after a common security principle of separating users from resource accounts through a MFA-enabled role-assumption bridge.
+
+### Example
+
+```terraform
+module "iam_users" {
+  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-users?ref=v0.3.0"
+  iam_account_alias = "my_unique_alias"
+}
+
+```
+
+### Parameters
+
+#### Required
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| **`iam_account_alias`** | string | | A globally unique identifier, human-readable for your AWS account |
+
+#### Optional
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| **`set_iam_account_alias`** | bool | true | Whether or not to set the account alias (useful to set to false when iam-users and iam-resources module are being deployed into the same account) |
+| **`multi_factor_auth_age`** | string | `14400` | The amount of time (in seconds) for a user session to be valid |
+| **`password_policy`** | map(string) | `{}` | A map of password policy parameters you want to set differently from the defaults |
+| **`resources_account_id`** | string | The current account ID | The account ID of the AWS account you want to start resources in |
+| **`resource_admin_role_name`** | string | `resource-admin` | The name of the administrator role one is supposed to assume in the resource account |
+| **`resource_user_role_name`** | string | `resource-user` | The name of the user role one is supposed to assume in the resource account |
+| **`admin_group_name`** | string | `admins` | Administrator group name |
+| **`user_group_name`** | string | `users` | User group name |
+
+## iam-resources
+
+A module to configure the "resources" account modeled after a common security principle of separating users from resource accounts through a MFA-enabled role-assumption bridge.
+
+### Example
+
+```terraform
+module "iam_resources" {
+  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-resources?ref=v0.3.0"
+  iam_account_alias = "my_unique_alias"
+}
+
+```
+
+### Parameters
+
+#### Required
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| **`iam_account_alias`** | string | | A globally unique identifier, human-readable for your AWS account |
+
+#### Optional
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| **`users_account_id`** | string | The current account ID | The account ID of the AWS account you keep your users in |
+| **`set_iam_account_alias`** | bool | true | Whether or not to set the account alias (useful to set to false when iam-users and iam-resources module are being deployed into the same account) |
+| **`admin_multi_factor_auth_age`** | string | `3600` | The amount of time (in seconds) for a user session to be valid when assuming administrative privileges |
+| **`user_multi_factor_auth_age`** | string | `14400` | The amount of time (in seconds) for a user session to be valid when assuming administrative privileges |
+| **`admin_access_role_name`** | string | `resource-admin` | The name of the administrator role one is supposed to assume |
+| **`user_access_role_name`** | string | `resource-user` | The name of the user role one is supposed to assume |
 
 ## vpc
 
