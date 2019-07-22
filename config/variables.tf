@@ -76,6 +76,12 @@ variable "desired_instance_types" {
   default     = []
 }
 
+variable "s3_kms_sse_encryption_key_arn" {
+  type        = string
+  description = "The ARN for the KMS key to use for S3 server-side bucket encryption"
+  default     = "" # Use the default master key
+}
+
 locals {
   config_policy_arn = "arn:aws:iam::aws:policy/service-role/AWSConfigRole"
   bucket_account_id = length(var.bucket_account_id) > 0 ? var.bucket_account_id : data.aws_caller_identity.current.account_id
@@ -91,7 +97,7 @@ locals {
 }
 
 provider "aws" {
-  version = ">= 2.19.0"
+  version = ">= 2.20.0"
 }
 
 data "aws_caller_identity" "current" {}

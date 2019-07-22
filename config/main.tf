@@ -70,6 +70,15 @@ resource "aws_s3_bucket" "config_with_lifecycle" {
   acl           = "private"
   region        = data.aws_region.current.name
 
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = var.s3_kms_sse_encryption_key_arn
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
+
   versioning {
     enabled = true
   }
@@ -100,6 +109,15 @@ resource "aws_s3_bucket" "config_without_lifecycle" {
   region        = data.aws_region.current.name
 
   force_destroy = true
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = var.s3_kms_sse_encryption_key_arn
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
 }
 
 resource "aws_config_configuration_recorder" "config" {

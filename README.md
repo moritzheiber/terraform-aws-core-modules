@@ -51,7 +51,7 @@ module "aws_config" {
   source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//config?ref=v0.3.1"
 
   # Optional, defaults to "aws-config"
-  bucket_name_prefix = "my-aws-config-bucket"
+  bucket_prefix = "my-aws-config-bucket"
   # Optional, you should disable it for testing purposes, otherwise you will have trouble removing the S3 bucket again
   enable_lifecycle_management_for_s3 = false
 }
@@ -78,6 +78,7 @@ and run `terraform init` to download the required module files.
 | **`enable_lifecycle_management_for_s3`** | bool | `true` | Whether or not to enable lifecycle management for the S3 bucket AWS Config writes to (should only be disabled for testing purposes) |
 | **`amis_by_tag_key_and_value_list`** | list(string) | `[]` | Required AMI tags for EC2 instances |
 | **`desired_instance_types`** | set(string) | `[]` | A set of comma-delimited instance types |
+| **`s3_kms_sse_encryption_key_arn`** | set(string) | `""` (the default master key is used) | The ARN for the KMS key used for S3 server-side bucket encryption |
 
 ### TODO
 

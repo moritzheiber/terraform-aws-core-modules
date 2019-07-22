@@ -78,7 +78,7 @@ locals {
 }
 
 provider "aws" {
-  version = "~> 2.19.0"
+  version = "~> 2.20.0"
 }
 
 data "aws_availability_zones" "available" {}
