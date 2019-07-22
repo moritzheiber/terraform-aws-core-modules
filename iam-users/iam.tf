@@ -149,20 +149,29 @@ resource "aws_iam_group" "users" {
 
 # Group policy assignments
 resource "aws_iam_policy_attachment" "users_mfa_self_service" {
-  name       = "users_mfa_self_service"
-  groups     = [aws_iam_group.users.name]
+  name = "users_mfa_self_service"
+  groups = [
+    aws_iam_group.admins.name,
+    aws_iam_group.users.name
+  ]
   policy_arn = aws_iam_policy.aws_mfa_self_service.arn
 }
 
 resource "aws_iam_policy_attachment" "users_access_key_self_service" {
-  name       = "users_access_key_self_service"
-  groups     = [aws_iam_group.users.name]
+  name = "users_access_key_self_service"
+  groups = [
+    aws_iam_group.admins.name,
+    aws_iam_group.users.name
+  ]
   policy_arn = aws_iam_policy.aws_access_key_self_service.arn
 }
 
 resource "aws_iam_policy_attachment" "users_list_iam_users" {
-  name       = "users_list_iam_users"
-  groups     = [aws_iam_group.users.name]
+  name = "users_list_iam_users"
+  groups = [
+    aws_iam_group.admins.name,
+    aws_iam_group.users.name
+  ]
   policy_arn = aws_iam_policy.aws_list_iam_users.arn
 }
 
