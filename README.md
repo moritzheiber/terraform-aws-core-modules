@@ -44,11 +44,11 @@ Some of them can receive extra parameters. See a table reference below.
 
 ### Example
 
-Add the following statement to your `variables.tf` to use the `config` module in version `v0.3.5`:
+Add the following statement to your `variables.tf` to use the `config` module in version `v0.3.6`:
 
 ```terraform
 module "aws_config" {
-  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//config?ref=v0.3.5"
+  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//config?ref=v0.3.6"
 
   # Optional, defaults to "aws-config"
   bucket_prefix = "my-aws-config-bucket"
@@ -91,12 +91,6 @@ A module to configure the "users" account modeled after a common security princi
 
 ![AWS IAM setup illustration](files/aws_iam_setup.png)
 
-1. The client/user attains temporary credentials in the "users" account by authenticating with their MFA device
-2. They then get assigned policies through group memberships
-3. These allow for them to call [AWS STS](https://docs.aws.amazon.com/STS/latest/APIReference/Welcome.html) to assume a role in the "resources" account
-4. They then get a set of temporary credentials valid for the "resources"
-5. Which allow them to schedule workloads in the "resources" account (e.g. create EC2 instances, instantiate a load balancer, use RDS or S3)
-
 This is modeled after a strict separation of privilege, as explained in [an article I wrote a while ago](https://www.thoughtworks.com/insights/blog/using-aws-security-first-class-citizen).
 
 Usually you will want to use this module together with [`iam-resources`](#iam-resources) module.
@@ -105,7 +99,7 @@ Usually you will want to use this module together with [`iam-resources`](#iam-re
 
 ```terraform
 module "iam_users" {
-  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-users?ref=v0.3.5"
+  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-users?ref=v0.3.6"
   iam_account_alias = "my_unique_alias"
 }
 
@@ -140,7 +134,7 @@ A module to configure the "resources" account modeled after a common security pr
 
 ```terraform
 module "iam_resources" {
-  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-resources?ref=v0.3.5"
+  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-resources?ref=v0.3.6"
   iam_account_alias = "my_unique_alias"
 }
 
@@ -173,11 +167,11 @@ The module builds a VPC with the default CIDR range of `10.0.0.0/16`, three subn
 
 ### Example
 
-Add the following statement to your `variables.tf` to use the `vpc` module in version `v0.3.5`:
+Add the following statement to your `variables.tf` to use the `vpc` module in version `v0.3.6`:
 
 ```terraform
 module "core_vpc" {
-  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//vpc?ref=v0.3.5"
+  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//vpc?ref=v0.3.6"
 
   tags = {
     Resource    = "my_team_name"
