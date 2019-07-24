@@ -1,6 +1,7 @@
-variable "resource_tag" {
-  type        = string
-  description = "A common tag for all VPC resources"
+variable "tags" {
+  type        = map(string)
+  description = "A map of tags to apply to all VPC resources"
+  default     = {}
 }
 
 variable "vpc_name" {
@@ -18,8 +19,7 @@ variable "vpc_cidr_range" {
 variable "public_subnet_cidrs" {
   type        = list(string)
   description = "A list of CIDRs for the public subnets. Needs to be the same amount as subnets in the Availability Zone you are deploying into (probably 3)"
-
-  default = []
+  default     = []
 }
 
 variable "public_subnet_size" {
@@ -31,8 +31,7 @@ variable "public_subnet_size" {
 variable "private_subnet_cidrs" {
   type        = list(string)
   description = "A list of CIDRs for the private subnets. Needs to be the same amount as subnets in the Availability Zone you are deploying into (probably 3)"
-
-  default = []
+  default     = []
 }
 
 variable "private_subnet_size" {

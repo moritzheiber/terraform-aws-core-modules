@@ -44,11 +44,11 @@ Some of them can receive extra parameters. See a table reference below.
 
 ### Example
 
-Add the following statement to your `variables.tf` to use the `config` module in version `v0.3.4`:
+Add the following statement to your `variables.tf` to use the `config` module in version `v0.3.5`:
 
 ```terraform
 module "aws_config" {
-  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//config?ref=v0.3.4"
+  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//config?ref=v0.3.5"
 
   # Optional, defaults to "aws-config"
   bucket_prefix = "my-aws-config-bucket"
@@ -87,13 +87,25 @@ and run `terraform init` to download the required module files.
 
 ## iam-users
 
-A module to configure the "users" account modeled after a common security principle of separating users from resource accounts through a MFA-enabled role-assumption bridge.
+A module to configure the "users" account modeled after a common security principle of separating users from resource accounts through a MFA-enabled role-assumption bridge:
+
+![AWS IAM setup illustration](files/aws_iam_setup.png)
+
+1. The client/user attains temporary credentials in the "users" account by authenticating with their MFA device
+2. They then get assigned policies through group memberships
+3. These allow for them to call [AWS STS](https://docs.aws.amazon.com/STS/latest/APIReference/Welcome.html) to assume a role in the "resources" account
+4. They then get a set of temporary credentials valid for the "resources"
+5. Which allow them to schedule workloads in the "resources" account (e.g. create EC2 instances, instantiate a load balancer, use RDS or S3)
+
+This is modeled after a strict separation of privilege, as explained in [an article I wrote a while ago](https://www.thoughtworks.com/insights/blog/using-aws-security-first-class-citizen).
+
+Usually you will want to use this module together with [`iam-resources`](#iam-resources) module.
 
 ### Example
 
 ```terraform
 module "iam_users" {
-  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-users?ref=v0.3.4"
+  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-users?ref=v0.3.5"
   iam_account_alias = "my_unique_alias"
 }
 
@@ -128,7 +140,7 @@ A module to configure the "resources" account modeled after a common security pr
 
 ```terraform
 module "iam_resources" {
-  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-resources?ref=v0.3.4"
+  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-resources?ref=v0.3.5"
   iam_account_alias = "my_unique_alias"
 }
 
@@ -155,33 +167,65 @@ module "iam_resources" {
 
 ## vpc
 
-The module builds a VPC with the default CIDR range of `10.0.0.0/16`, three subnets a "public" configuration (attached and routed to an AWS Internet Gateway) and three subnets in a "private" configuration (attached and routed through three separate AWS NAT Gateways). You can specify the following attributes:
+The module builds a VPC with the default CIDR range of `10.0.0.0/16`, three subnets a "public" configuration (attached and routed to an AWS Internet Gateway) and three subnets in a "private" configuration (attached and routed through three separate AWS NAT Gateways):
+
+![AWS VPC illustration](files/aws_vpc.png)
 
 ### Example
 
-Add the following statement to your `variables.tf` to use the `vpc` module in version `v0.3.4`:
+Add the following statement to your `variables.tf` to use the `vpc` module in version `v0.3.5`:
 
 ```terraform
 module "core_vpc" {
-  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//vpc?ref=v0.3.4"
+  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//vpc?ref=v0.3.5"
 
-  resource_tag = "my_aws_account"
+  tags = {
+    Resource    = "my_team_name"
+    Cost_Center = "my_billing_tag"
+  }
 }
 ```
 
 and run `terraform init` to download the required module files.
 
+All created **subnets will have a tag created for them which specifies their scope** (i.e. "public" for public subnets and "private" for private subnets) which you can filter on using Terraform data sources:
+
+```terraform
+data "aws_vpc" "core" {
+tags = {
+    # `core_vpc` is the default, the variable is `vpc_name`
+    Name = "core_vpc"
+  }
+}
+
+data "aws_subnet_ids" "public" {
+  vpc_id = data.aws_vpc.core.id
+
+  tags = {
+    Scope = "public"
+  }
+}
+
+data "aws_subnet_ids" "private" {
+  vpc_id = data.aws_vpc.core.id
+
+  tags = {
+    Scope = "private"
+  }
+}
+```
+
+The result is a list of subnet IDs you can use to create other resources such as Elastic Load Balancers or AutoScalingGroups.
+
 ### Parameters
 
 #### Required
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| **`resource_tag`**| string| | A common tag for all the VPC resources created |
 
 #### Optional
 
 | Attribute | Type | Default | Description |
 |-----------|------|---------|-------------|
+| **`tags`**| map(string) | | A common set of tags for all the VPC resources created |
 | **`vpc_name`** | string | `core_vpc` | The name of the VPC |
 | **`vpc_cidr_range`** | string | `10.0.0.0/16` (enough for 65534 IPv4 addresses)) | CIDR range for the VPC |
 | **`public_subnet_cidrs`** | list | Automatically calculated subnet blocks | CIDR ranges for the public subnets. You have to specify at least as many subnets as there are Availability Zones in the region you are deploying into (probably 3) |
