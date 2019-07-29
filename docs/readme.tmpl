@@ -141,7 +141,7 @@ The result is a list of subnet IDs you can use to create other resources such as
 {{- if .RequiredCore}}
 {{- range .RequiredCore }}
 * Terraform ({{- tt . -}})
-{{- end}}{{end}}
+{{- end}}{{end -}}
 {{ if .RequiredProviders}}
 {{- range $name, $versions := .RequiredProviders }}
 * `{{ $name }}` provider {{ if $versions }}({{ commas $versions | tt }}){{ else }}(any version){{ end }}

@@ -60,7 +60,6 @@ and run `terraform init` to download the required module files.
 
 ### Prerequisites
 * Terraform (`>= 0.12.4`)
-
 * `aws` provider (`>= 2.20.0`)
 
 ### Input Variables
@@ -101,7 +100,6 @@ module "iam_users" {
 
 ### Prerequisites
 * Terraform (`>= 0.12.4`)
-
 * `aws` provider (`~> 2.20.0`)
 
 ### Input Variables
@@ -137,7 +135,6 @@ module "iam_resources" {
 
 ### Prerequisites
 * Terraform (`>= 0.12.4`)
-
 * `aws` provider (`~> 2.20.0`)
 
 ### Input Variables
@@ -209,7 +206,6 @@ The result is a list of subnet IDs you can use to create other resources such as
 
 ### Prerequisites
 * Terraform (`>= 0.12.4`)
-
 * `aws` provider (`~> 2.20.0`)
 
 ### Input Variables
