@@ -1,40 +1,179 @@
-# {{ tt .Path }}
+# AWS Core Modules
+
+This is a collection of Terraform "core" modules I would consider to be building blocks of every reasonable AWS account setup.
+
+## Available modules
+{{- range . }}
+- [{{ .Path }}](#{{ .Path }})
+{{- end }}
+{{ range . }}
+{{ $Version := "0.3.7" -}}
+## {{ tt .Path }}
+{{ if contains .Path "config" }}
+The module configures AWS Config to monitor your account for non-compliant resources for the following checks:
+
+- **INSTANCES_IN_VPC**: All instances need to be started in a VPC (the default since years)
+- **EC2_VOLUME_INUSE_CHECK**: All volumes need to be attached (otherwise they cost money for nothing)
+- **EIP_ATTACHED**: All EIPs need to be attached (otherwise they cost money)
+- **ENCRYPTED_VOLUMES**: All volumes in the account need to be encrypted
+- **INCOMING_SSH_DISABLED**: No Security Group has port 22 open to the world
+- **CLOUD_TRAIL_ENABLED**: CloudTrail is enabled in the account
+- **CLOUDWATCH_ALARM_ACTION_CHECK**: You need to at least have an action for the state "Alarm" defined
+- **IAM_GROUP_HAS_USERS_CHECK**: Every group in IAM needs to have users attached to it
+- **IAM_PASSWORD_POLICY**: Account needs to have a password policy, with a certain complexity and it has to be enforced
+- **IAM_USER_GROUP_MEMBERSHIP_CHECK**: A list of groups IAM users have to be a part of
+- **IAM_USER_NO_POLICIES_CHECK**: None of your users should have policies attached to them directly, use groups/roles for that
+- **ROOT_ACCOUNT_MFA_ENABLED**: Your root account needs to have MFA enabled
+- **S3_BUCKET_PUBLIC_READ_PROHIBITED**: S3 buckets shouldn't be open to the public
+- **S3_BUCKET_PUBLIC_WRITE_PROHIBITED**: S3 buckets shouldn't be publicly writable
+- **S3_BUCKET_SSL_REQUESTS_ONLY**: S3 buckets must only allow TLS traffic (through bucket policies)
+- **S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED**: S3 buckets must have SSE enabled
+- **S3_BUCKET_VERSIONING_ENABLED**: S3 bucket versioning has to be enabled
+- **EBS_OPTIMIZED_INSTANCE**: All instances run on EBS-optimized storage
+- **ACCESS_KEYS_ROTATED**: All your access keys need to be rotated after a certain while
+- **APPROVED_AMIS_BY_TAG**: Only allow AMIs with a certain tag for EC2 instances
+- **AUTOSCALING_GROUP_ELB_HEALTHCHECK_REQUIRED**: AutoScalingGroups must be attached to an LB and have health checks enabled
+- **DESIRED_INSTANCE_TYPE**: Only allow for certain instance types to be used
+- **RDS_INSTANCE_PUBLIC_ACCESS_CHECK**: RDS instances must not be publicly accessible
+- **RDS_SNAPSHOTS_PUBLIC_PROHIBITED**: RDS snapshots must not be public
+- **IAM_POLICY_NO_STATEMENTS_WITH_ADMIN_ACCESS**: None of your policies allow for administrative privilege escalation
+- **IAM_ROOT_ACCESS_KEY_CHECK**: Your root account must not have any security credentials attached to it
+
+Some of them can receive extra parameters. See a table reference below.
+
+### Example
+
+Add the following statement to your `variables.tf` to use the `config` module in version `v{{- $Version -}}`:
+
+```terraform
+module "aws_config" {
+  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//config?ref=v{{- $Version -}}"
+
+  # Optional, defaults to "aws-config"
+  bucket_prefix = "my-aws-config-bucket"
+  # Optional, you should disable it for testing purposes, otherwise you will have trouble removing the S3 bucket again
+  enable_lifecycle_management_for_s3 = false
+}
+```
+
+and run `terraform init` to download the required module files.
+{{ else if contains .Path "iam-users" }}
+A module to configure the "users" account modeled after a common security principle of separating users from resource accounts through a MFA-enabled role-assumption bridge:
+
+![AWS IAM setup illustration](files/aws_iam_setup.png)
+
+This is modeled after a strict separation of privilege, as explained in [an article I wrote a while ago](https://www.thoughtworks.com/insights/blog/using-aws-security-first-class-citizen).
+
+Usually you will want to use this module together with [`iam-resources`](#iam-resources) module.
+
+### Example
+
+```terraform
+module "iam_users" {
+  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-users?ref=v{{- $Version -}}"
+  iam_account_alias = "my_unique_alias"
+}
+```
+{{ else if contains .Path "iam-resources" }}
+A module to configure the "resources" account modeled after a common security principle of separating users from resource accounts through a MFA-enabled role-assumption bridge.
+
+### Example
+
+```terraform
+module "iam_resources" {
+  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-resources?ref=v{{- $Version -}}"
+  iam_account_alias = "my_unique_alias"
+}
+
+```
+{{ else if contains .Path "vpc" }}
+The module builds a VPC with the default CIDR range of `10.0.0.0/16`, three subnets a "public" configuration (attached and routed to an AWS Internet Gateway) and three subnets in a "private" configuration (attached and routed through three separate AWS NAT Gateways):
+
+![AWS VPC illustration](files/aws_vpc.png)
+
+### Example
+
+Add the following statement to your `variables.tf` to use the `vpc` module in version `v{{- $Version -}}`:
+
+```terraform
+module "core_vpc" {
+  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//vpc?ref=v{{- $Version -}}"
+
+  tags = {
+    Resource    = "my_team_name"
+    Cost_Center = "my_billing_tag"
+  }
+}
+```
+
+and run `terraform init` to download the required module files.
+
+All created **subnets will have a tag created for them which specifies their scope** (i.e. "public" for public subnets and "private" for private subnets) which you can filter on using Terraform data sources:
+
+```terraform
+data "aws_vpc" "core" {
+tags = {
+    # `core_vpc` is the default, the variable is `vpc_name`
+    Name = "core_vpc"
+  }
+}
+
+data "aws_subnet_ids" "public" {
+  vpc_id = data.aws_vpc.core.id
+
+  tags = {
+    Scope = "public"
+  }
+}
+
+data "aws_subnet_ids" "private" {
+  vpc_id = data.aws_vpc.core.id
+
+  tags = {
+    Scope = "private"
+  }
+}
+```
+
+The result is a list of subnet IDs you can use to create other resources such as Elastic Load Balancers or AutoScalingGroups.
+{{end}}
+### Prerequisites
 {{- if .RequiredCore}}
-Core Version Constraints:
 {{- range .RequiredCore }}
-* {{ tt . }}
+* Terraform ({{- tt . -}})
 {{- end}}{{end}}
-{{- if .RequiredProviders}}
-Provider Requirements:
+{{ if .RequiredProviders}}
 {{- range $name, $versions := .RequiredProviders }}
-* **{{ $name }}:** {{ if $versions }}{{ commas $versions | tt }}{{ else }}(any version){{ end }}
+* `{{ $name }}` provider {{ if $versions }}({{ commas $versions | tt }}){{ else }}(any version){{ end }}
 {{- end}}{{end}}
-{{- if .Variables}}
-## Input Variables
+{{ if .Variables}}
+### Input Variables
 | Variable | Type | Default | Description |
-|##########|######|#########|#############|
+|----------|------|---------|-------------|
 {{- range .Variables }}
-| **{{ tt .Name }}** | {{ if .Type }}{{ .Type }}{{end}} | {{ if .Default }}{{ json .Default | tt }}){{else}}(required){{end}} |
+| **{{ tt .Name }}** | {{ if .Type }}{{ .Type }}{{end}} | {{ if not (.Default | nilCheck) }}{{ json .Default | tt }}{{else}}(required){{end}} |
 {{- if .Description}} {{ .Description }}{{ end }} |
 {{- end}}{{end}}
 {{- if .Outputs}}
-## Output Values
+### Output Values
+| Variable | Description |
+|----------|-------------|
 {{- range .Outputs }}
-* {{ tt .Name }}{{ if .Description}}: {{ .Description }}{{ end }}
+| **`{{ tt .Name }}`** | {{ if .Description}}{{ .Description }} |{{ end }}
 {{- end}}{{end}}
 {{- if .ModuleCalls}}
-## Child Modules
+### Child Modules
 {{- range .ModuleCalls }}
 * {{ tt .Name }} from {{ tt .Source }}{{ if .Version }} ({{ tt .Version }}){{ end }}
 {{- end}}{{end}}
 {{- if .Diagnostics}}
-## Problems
+### Problems
 {{- range .Diagnostics }}
-## {{ severity .Severity }}{{ .Summary }}{{ if .Pos }}
+### {{ severity .Severity }}{{ .Summary }}{{ if .Pos }}
 (at {{ tt .Pos.Filename }} line {{ .Pos.Line }}{{ end }})
 {{ if .Detail }}
 {{ .Detail }}
-{{- end }}
+{{ end }}
 {{- end}}{{end}}
-
-{{/* # vim: ft=gotexttmpl: */}}
+{{- end}}
+{{- /* # vim: ft=gotexttmpl: */ -}}

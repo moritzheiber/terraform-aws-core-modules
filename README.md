@@ -3,13 +3,12 @@
 This is a collection of Terraform "core" modules I would consider to be building blocks of every reasonable AWS account setup.
 
 ## Available modules
-
 - [config](#config)
 - [iam-users](#iam-users)
 - [iam-resources](#iam-resources)
 - [vpc](#vpc)
 
-## config
+## `config`
 
 The module configures AWS Config to monitor your account for non-compliant resources for the following checks:
 
@@ -44,11 +43,11 @@ Some of them can receive extra parameters. See a table reference below.
 
 ### Example
 
-Add the following statement to your `variables.tf` to use the `config` module in version `v0.3.6`:
+Add the following statement to your `variables.tf` to use the `config` module in version `v0.3.7`:
 
 ```terraform
 module "aws_config" {
-  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//config?ref=v0.3.6"
+  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//config?ref=v0.3.7"
 
   # Optional, defaults to "aws-config"
   bucket_prefix = "my-aws-config-bucket"
@@ -59,33 +58,29 @@ module "aws_config" {
 
 and run `terraform init` to download the required module files.
 
-### Parameters
+### Prerequisites
+* Terraform (`>= 0.12.4`)
 
-#### Optional
+* `aws` provider (`>= 2.20.0`)
 
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| **`bucket_prefix`** | string | `aws-config` | Prefix for the S3 bucket AWS Config Recorder writes to |
-| **`bucket_key_prefix`** | string | `aws_config` | Prefix of the keys AWS Config writes to inside the bucket |
-| **`config_recorder_name`** | string | `config` | The name of the recorder for AWS Config |
-| **`config_delivery_channel_name`** | string | `conifg` | The name of the delivery channel for AWS Config |
-| **`iam_role_name`** | string | `config` | The name of the IAM role created for delegating permissions to AWS Config |
-| **`bucket_account_id`** | string | `""` (will use own S3 bucket)| The AWS account ID the S3 bucket lives in that AWS Config is writing its records to. Defaults to the ID of the current account |
-| **`delivery_frequency`** | string | `Three_Hours` | The frequency at which AWS Config delivers its recorded findings to S3 |
-| **`password_policy`** | map(string) | `{}` | A map of values describing the password policy parameters AWS Config is looking for |
-| **`iam_user_groups`** | list(string) | `[]` | A list of mandatory groups for IAM users |
-| **`max_access_key_age`** | string | "90" | The maximum amount of days an access key can live without being rotated |
-| **`enable_lifecycle_management_for_s3`** | bool | `true` | Whether or not to enable lifecycle management for the S3 bucket AWS Config writes to (should only be disabled for testing purposes) |
+### Input Variables
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
 | **`amis_by_tag_key_and_value_list`** | list(string) | `[]` | Required AMI tags for EC2 instances |
-| **`desired_instance_types`** | set(string) | `[]` | A set of comma-delimited instance types |
-| **`s3_kms_sse_encryption_key_arn`** | set(string) | `""` (the default master key is used) | The ARN for the KMS key used for S3 server-side bucket encryption |
-
-### TODO
-
-- Add a lot of configurable parameters
-- Add some tagging filters
-
-## iam-users
+| **`bucket_account_id`** | string | `""` | The AWS account ID the S3 bucket lives in that AWS Config is writing its records to. Defaults to the ID of the current account |
+| **`bucket_key_prefix`** | string | `"aws_config"` | The prefix of the keys AWS Config writes to |
+| **`bucket_prefix`** | string | `"aws-config"` | The prefix for the S3 bucket AWS Config Recorder writes to |
+| **`config_delivery_channel_name`** | string | `"config"` | The name of the delivery channel for AWS Config |
+| **`config_recorder_name`** | string | `"config"` | The name of the recorder for AWS Config |
+| **`delivery_frequency`** | string | `"Three_Hours"` | The frequency at which AWS Config delivers its recorded findings to S3 |
+| **`desired_instance_types`** | set(string) | `[]` | A string of comma-delimited instance types |
+| **`enable_lifecycle_management_for_s3`** | bool | `true` | Whether or not to enable lifecycle management for the S3 bucket AWS Config writes to |
+| **`iam_role_name`** | string | `"config"` | The name of the IAM role created for delegating permissions to AWS Config |
+| **`iam_user_groups`** | list(string) | `[]` | A list of mandatory groups for IAM users |
+| **`max_access_key_age`** | string | `"90"` | The maximum amount of days an access key can live without being rotated |
+| **`password_policy`** | map(string) | `{}` | A map of values describing the password policy parameters AWS Config is looking for |
+| **`s3_kms_sse_encryption_key_arn`** | string | `""` | The ARN for the KMS key to use for S3 server-side bucket encryption |
+## `iam-users`
 
 A module to configure the "users" account modeled after a common security principle of separating users from resource accounts through a MFA-enabled role-assumption bridge:
 
@@ -99,34 +94,34 @@ Usually you will want to use this module together with [`iam-resources`](#iam-re
 
 ```terraform
 module "iam_users" {
-  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-users?ref=v0.3.6"
+  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-users?ref=v0.3.7"
   iam_account_alias = "my_unique_alias"
 }
-
 ```
 
-### Parameters
+### Prerequisites
+* Terraform (`>= 0.12.4`)
 
-#### Required
+* `aws` provider (`~> 2.20.0`)
 
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| **`iam_account_alias`** | string | | A globally unique identifier, human-readable for your AWS account |
-
-#### Optional
-
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| **`set_iam_account_alias`** | bool | true | Whether or not to set the account alias (useful to set to false when iam-users and iam-resources module are being deployed into the same account) |
-| **`multi_factor_auth_age`** | string | `14400` | The amount of time (in seconds) for a user session to be valid |
+### Input Variables
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| **`admin_group_name`** | string | `"admins"` | Administrator group name |
+| **`iam_account_alias`** | string | (required) | A globally unique identifier, human-readable for your AWS account |
+| **`multi_factor_auth_age`** | string | `"14400"` | The amount of time (in seconds) for a user session to be valid |
 | **`password_policy`** | map(string) | `{}` | A map of password policy parameters you want to set differently from the defaults |
-| **`resources_account_id`** | string | The current account ID | The account ID of the AWS account you want to start resources in |
-| **`resource_admin_role_name`** | string | `resource-admin` | The name of the administrator role one is supposed to assume in the resource account |
-| **`resource_user_role_name`** | string | `resource-user` | The name of the user role one is supposed to assume in the resource account |
-| **`admin_group_name`** | string | `admins` | Administrator group name |
-| **`user_group_name`** | string | `users` | User group name |
-
-## iam-resources
+| **`resource_admin_role_name`** | string | `"resource-admin"` | The name of the administrator role one is supposed to assume in the resource account |
+| **`resource_user_role_name`** | string | `"resource-user"` | The name of the user role one is supposed to assume in the resource account |
+| **`resources_account_id`** | string | `""` | The account ID of the AWS account you want to start resources in |
+| **`set_iam_account_alias`** | bool | `true` | Whether or not to set the account alias (useful to set to false when iam-users and iam-resources module are being deployed into the same account) |
+| **`user_group_name`** | string | `"users"` | User group name |
+### Output Values
+| Variable | Description |
+|----------|-------------|
+| **``admin_group_name``** | The name of the admin group |
+| **``user_group_name``** | The name of the user group |
+## `iam-resources`
 
 A module to configure the "resources" account modeled after a common security principle of separating users from resource accounts through a MFA-enabled role-assumption bridge.
 
@@ -134,32 +129,33 @@ A module to configure the "resources" account modeled after a common security pr
 
 ```terraform
 module "iam_resources" {
-  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-resources?ref=v0.3.6"
+  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-resources?ref=v0.3.7"
   iam_account_alias = "my_unique_alias"
 }
 
 ```
 
-### Parameters
+### Prerequisites
+* Terraform (`>= 0.12.4`)
 
-#### Required
+* `aws` provider (`~> 2.20.0`)
 
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| **`iam_account_alias`** | string | | A globally unique identifier, human-readable for your AWS account |
-
-#### Optional
-
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| **`users_account_id`** | string | The current account ID | The account ID of the AWS account you keep your users in |
-| **`set_iam_account_alias`** | bool | true | Whether or not to set the account alias (useful to set to false when iam-users and iam-resources module are being deployed into the same account) |
-| **`admin_multi_factor_auth_age`** | string | `3600` | The amount of time (in seconds) for a user session to be valid when assuming administrative privileges |
-| **`user_multi_factor_auth_age`** | string | `14400` | The amount of time (in seconds) for a user session to be valid when assuming administrative privileges |
-| **`admin_access_role_name`** | string | `resource-admin` | The name of the administrator role one is supposed to assume |
-| **`user_access_role_name`** | string | `resource-user` | The name of the user role one is supposed to assume |
-
-## vpc
+### Input Variables
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| **`admin_access_role_name`** | string | `"resource-admin"` | Name of the admin role |
+| **`admin_multi_factor_auth_age`** | string | `"3600"` | The amount of time (in seconds) for a admin session to be valid |
+| **`iam_account_alias`** | string | (required) | A globally unique identifier, human-readable for your AWS account |
+| **`set_iam_account_alias`** | bool | `true` | Whether or not to set the account alias (useful to set to false when iam-users and iam-resources module are being deployed into the same account) |
+| **`user_access_role_name`** | string | `"resource-user"` | Name of the user role |
+| **`user_multi_factor_auth_age`** | string | `"14400"` | The amount of time (in seconds) for a user session to be valid |
+| **`users_account_id`** | string | `""` | The account ID of where the users are living in |
+### Output Values
+| Variable | Description |
+|----------|-------------|
+| **``admin_access_role_name``** | The name of the role users are able to assume to attain admin privileges |
+| **``user_access_role_name``** | The name of the role users are able to assume to attain user privileges |
+## `vpc`
 
 The module builds a VPC with the default CIDR range of `10.0.0.0/16`, three subnets a "public" configuration (attached and routed to an AWS Internet Gateway) and three subnets in a "private" configuration (attached and routed through three separate AWS NAT Gateways):
 
@@ -167,11 +163,11 @@ The module builds a VPC with the default CIDR range of `10.0.0.0/16`, three subn
 
 ### Example
 
-Add the following statement to your `variables.tf` to use the `vpc` module in version `v0.3.6`:
+Add the following statement to your `variables.tf` to use the `vpc` module in version `v0.3.7`:
 
 ```terraform
 module "core_vpc" {
-  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//vpc?ref=v0.3.6"
+  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//vpc?ref=v0.3.7"
 
   tags = {
     Resource    = "my_team_name"
@@ -211,23 +207,29 @@ data "aws_subnet_ids" "private" {
 
 The result is a list of subnet IDs you can use to create other resources such as Elastic Load Balancers or AutoScalingGroups.
 
-### Parameters
+### Prerequisites
+* Terraform (`>= 0.12.4`)
 
-#### Required
+* `aws` provider (`~> 2.20.0`)
 
-#### Optional
-
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| **`tags`**| map(string) | | A common set of tags for all the VPC resources created |
-| **`vpc_name`** | string | `core_vpc` | The name of the VPC |
-| **`vpc_cidr_range`** | string | `10.0.0.0/16` (enough for 65534 IPv4 addresses)) | CIDR range for the VPC |
-| **`public_subnet_cidrs`** | list | Automatically calculated subnet blocks | CIDR ranges for the public subnets. You have to specify at least as many subnets as there are Availability Zones in the region you are deploying into (probably 3) |
-| **`private_subnet_cidrs`** | list | Automatically calculated subnet blocks | CIDR ranges for the private subnets. You have to specify at least as many subnets as there are Availability Zones in the region you are deploying into (probably 3) |
-| **`public_subnet_size`** | number | `6` (that's a /22 with 1024 addresses) | CIDR size for each public subnet |
-| **`private_subnet_size`** | number | `6` (that's a /22, with 1024 addresses) | CIDR size of each private subnet |
-| **`private_subnet_offset`** | number | `32` (private subnets start at 10.0.128.0/22 with the default settings) | Offset between public and private subnets |
-| **`public_subnet_prefix`** | string | `${var.vpc_name}_public_subnet` | Prefix of the public subnets |
-| **`private_subnet_prefix`** | string | `${var.vpc_name}_private_subnet` | Prefix of the private subnets |
+### Input Variables
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| **`enable_dns_hostnames`** | bool | `true` | Whether or not to enable VPC DNS hostname support |
 | **`enable_dns_support`** | bool | `true` | Whether or not to enable VPC DNS support |
-| **`enable_dns_hostnames`** | bool | `true` | Whether or not to enable VPC DNS hostnames |
+| **`private_subnet_cidrs`** | list(string) | `[]` | A list of CIDRs for the private subnets. Needs to be the same amount as subnets in the Availability Zone you are deploying into (probably 3) |
+| **`private_subnet_offset`** | number | `32` | The amount of IP space between the public and the private subnet |
+| **`private_subnet_prefix`** | string | `""` | The prefix to attach to the name of the private subnets |
+| **`private_subnet_size`** | number | `6` | The size of the private subnet (default: 1022 usable addresses) |
+| **`public_subnet_cidrs`** | list(string) | `[]` | A list of CIDRs for the public subnets. Needs to be the same amount as subnets in the Availability Zone you are deploying into (probably 3) |
+| **`public_subnet_prefix`** | string | `""` | The prefix to attach to the name of the public subnets |
+| **`public_subnet_size`** | number | `"6"` | The size of the public subnet (default: 1022 usable addresses) |
+| **`tags`** | map(string) | `{}` | A map of tags to apply to all VPC resources |
+| **`vpc_cidr_range`** | string | `"10.0.0.0/16"` | The IP address space to use for the VPC |
+| **`vpc_name`** | string | `"core_vpc"` | The name of the VPC |
+### Output Values
+| Variable | Description |
+|----------|-------------|
+| **``private_subnet_ids``** | A list of private subnet IDs |
+| **``public_subnet_ids``** | A list of public subnet IDs |
+| **``vpc_id``** | The ID of the created VPC |
