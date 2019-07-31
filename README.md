@@ -150,8 +150,10 @@ module "iam_resources" {
 ### Output Values
 | Variable | Description |
 |----------|-------------|
-| **``admin_access_role_name``** | The name of the role users are able to assume to attain admin privileges |
-| **``user_access_role_name``** | The name of the role users are able to assume to attain user privileges |
+| **``resource_admin_role_arn``** | The ARN of the role users are able to assume to attain admin privileges |
+| **``resource_admin_role_name``** | The name of the role users are able to assume to attain admin privileges |
+| **``resource_user_role_arn``** | The ARN of the role users are able to assume to attain user privileges |
+| **``resource_user_role_name``** | The name of the role users are able to assume to attain user privileges |
 ## `vpc`
 
 The module builds a VPC with the default CIDR range of `10.0.0.0/16`, three subnets a "public" configuration (attached and routed to an AWS Internet Gateway) and three subnets in a "private" configuration (attached and routed through three separate AWS NAT Gateways):
