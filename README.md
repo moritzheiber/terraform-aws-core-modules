@@ -43,11 +43,11 @@ Some of them can receive extra parameters. See a table reference below.
 
 ### Example
 
-Add the following statement to your `variables.tf` to use the `config` module in version `v0.3.8`:
+Add the following statement to your `variables.tf` to use the `config` module in version `v0.3.9`:
 
 ```terraform
 module "aws_config" {
-  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//config?ref=v0.3.8"
+  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//config?ref=v0.3.9"
 
   # Optional, defaults to "aws-config"
   bucket_prefix = "my-aws-config-bucket"
@@ -59,7 +59,7 @@ module "aws_config" {
 and run `terraform init` to download the required module files.
 
 ### Prerequisites
-* Terraform (`>= 0.12.4`)
+* Terraform (`>= 0.12.6`)
 * `aws` provider (`>= 2.20.0`)
 
 ### Input Variables
@@ -87,33 +87,53 @@ A module to configure the "users" account modeled after a common security princi
 
 This is modeled after a strict separation of privilege, as explained in [an article I wrote a while ago](https://www.thoughtworks.com/insights/blog/using-aws-security-first-class-citizen).
 
-Usually you will want to use this module together with [`iam-resources`](#iam-resources) module.
+You can also create IAM users and IAM groups with this module and assign the users to specific groups. The module will create two default groups, one for admins and users, which you can disable by setting the `admin_group_name` and `user_group_name` to an empty string.
+
+Creating additional users is done by passing a map called `users` to the module, with a group mapping attached to them (the best practice is to never have users live "outside" of groups).
+
+_Usually you will want to use this module together with [`iam-resources`](#iam-resources) module._
 
 ### Example
 
 ```terraform
-module "iam_users" {
-  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-users?ref=v0.3.8"
-  iam_account_alias = "my_unique_alias"
+variable "users" {
+  type = map(map(list(string)))
+  default = {
+    my_user = {
+      groups = ["admins"]
+    }
+  }
 }
+
+module "iam_users" {
+  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-users?ref=v0.3.9"
+  iam_account_alias = "my_unique_alias"
+
+  users = var.users
+}
+
+This will run the module and create all the necessary permissions along with a user belonging to the `admins` groups.
 ```
 
 ### Prerequisites
-* Terraform (`>= 0.12.4`)
+* Terraform (`>= 0.12.6`)
 * `aws` provider (`~> 2.20.0`)
 
 ### Input Variables
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| **`admin_group_name`** | string | `"admins"` | Administrator group name |
+| **`additional_admin_groups`** | list(string) | `[]` | A list of additional groups to create associated with administrative privileges |
+| **`additional_user_groups`** | list(string) | `[]` | A list of additional groups to create associated with regular users |
+| **`admin_group_name`** | string | `"admins"` | The name of the initial group created for administrators |
 | **`iam_account_alias`** | string | (required) | A globally unique identifier, human-readable for your AWS account |
+| **`iam_users`** | map(map(string)) | `{}` | A list of maps of users and their groups. Default is to create no users. |
 | **`multi_factor_auth_age`** | string | `"14400"` | The amount of time (in seconds) for a user session to be valid |
 | **`password_policy`** | map(string) | `{}` | A map of password policy parameters you want to set differently from the defaults |
 | **`resource_admin_role_name`** | string | `"resource-admin"` | The name of the administrator role one is supposed to assume in the resource account |
 | **`resource_user_role_name`** | string | `"resource-user"` | The name of the user role one is supposed to assume in the resource account |
 | **`resources_account_id`** | string | `""` | The account ID of the AWS account you want to start resources in |
 | **`set_iam_account_alias`** | bool | `true` | Whether or not to set the account alias (useful to set to false when iam-users and iam-resources module are being deployed into the same account) |
-| **`user_group_name`** | string | `"users"` | User group name |
+| **`user_group_name`** | string | `"users"` | The name of the initial group created for users |
 ### Output Values
 | Variable | Description |
 |----------|-------------|
@@ -124,17 +144,16 @@ module "iam_users" {
 A module to configure the "resources" account modeled after a common security principle of separating users from resource accounts through a MFA-enabled role-assumption bridge.
 
 ### Example
-
 ```terraform
 module "iam_resources" {
-  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-resources?ref=v0.3.8"
+  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-resources?ref=v0.3.9"
   iam_account_alias = "my_unique_alias"
 }
 
 ```
 
 ### Prerequisites
-* Terraform (`>= 0.12.4`)
+* Terraform (`>= 0.12.6`)
 * `aws` provider (`~> 2.20.0`)
 
 ### Input Variables
@@ -162,11 +181,11 @@ The module builds a VPC with the default CIDR range of `10.0.0.0/16`, three subn
 
 ### Example
 
-Add the following statement to your `variables.tf` to use the `vpc` module in version `v0.3.8`:
+Add the following statement to your `variables.tf` to use the `vpc` module in version `v0.3.9`:
 
 ```terraform
 module "core_vpc" {
-  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//vpc?ref=v0.3.8"
+  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//vpc?ref=v0.3.9"
 
   tags = {
     Resource    = "my_team_name"
@@ -207,7 +226,7 @@ data "aws_subnet_ids" "private" {
 The result is a list of subnet IDs you can use to create other resources such as Elastic Load Balancers or AutoScalingGroups.
 
 ### Prerequisites
-* Terraform (`>= 0.12.4`)
+* Terraform (`>= 0.12.6`)
 * `aws` provider (`~> 2.20.0`)
 
 ### Input Variables

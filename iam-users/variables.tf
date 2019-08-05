@@ -41,14 +41,32 @@ variable "resource_user_role_name" {
 
 variable "admin_group_name" {
   type        = string
-  description = "Administrator group name"
+  description = "The name of the initial group created for administrators"
   default     = "admins"
 }
 
 variable "user_group_name" {
   type        = string
-  description = "User group name"
+  description = "The name of the initial group created for users"
   default     = "users"
+}
+
+variable "additional_admin_groups" {
+  type        = list(string)
+  description = "A list of additional groups to create associated with administrative privileges"
+  default     = []
+}
+
+variable "additional_user_groups" {
+  type        = list(string)
+  description = "A list of additional groups to create associated with regular users"
+  default     = []
+}
+
+variable "iam_users" {
+  type        = map(map(string))
+  description = "A list of maps of users and their groups. Default is to create no users."
+  default     = {}
 }
 
 data "aws_caller_identity" "current" {}
@@ -65,6 +83,8 @@ locals {
     max_password_age               = "90"
     allow_users_to_change_password = "true"
   }, var.password_policy)
+  admin_groups = compact(concat([var.admin_group_name], var.additional_admin_groups))
+  user_groups  = compact(concat([var.user_group_name], var.additional_user_groups))
 }
 
 provider "aws" {

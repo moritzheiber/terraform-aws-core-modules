@@ -138,40 +138,46 @@ resource "aws_iam_account_alias" "iam_account_alias" {
   account_alias = var.iam_account_alias
 }
 
-# Groups
-resource "aws_iam_group" "admins" {
-  name = var.admin_group_name
+# Users
+resource "aws_iam_user" "users" {
+  for_each = var.iam_users
+  name     = each.key
 }
 
-resource "aws_iam_group" "users" {
-  name = var.user_group_name
+resource "aws_iam_user_group_membership" "users_group_memberships" {
+  for_each = var.iam_users
+  user     = each.key
+
+  groups = [
+    each.value["groups"],
+  ]
+}
+
+# Groups
+resource "aws_iam_group" "groups" {
+  for_each = toset(concat(
+    local.admin_groups,
+    local.user_groups
+  ))
+  name = each.key
 }
 
 # Group policy assignments
 resource "aws_iam_policy_attachment" "users_mfa_self_service" {
-  name = "users_mfa_self_service"
-  groups = [
-    aws_iam_group.admins.name,
-    aws_iam_group.users.name
-  ]
+  name       = "users_mfa_self_service"
+  groups     = values(aws_iam_group.groups)[*].name
   policy_arn = aws_iam_policy.aws_mfa_self_service.arn
 }
 
 resource "aws_iam_policy_attachment" "users_access_key_self_service" {
-  name = "users_access_key_self_service"
-  groups = [
-    aws_iam_group.admins.name,
-    aws_iam_group.users.name
-  ]
+  name       = "users_access_key_self_service"
+  groups     = values(aws_iam_group.groups)[*].name
   policy_arn = aws_iam_policy.aws_access_key_self_service.arn
 }
 
 resource "aws_iam_policy_attachment" "users_list_iam_users" {
-  name = "users_list_iam_users"
-  groups = [
-    aws_iam_group.admins.name,
-    aws_iam_group.users.name
-  ]
+  name       = "users_list_iam_users"
+  groups     = values(aws_iam_group.groups)[*].name
   policy_arn = aws_iam_policy.aws_list_iam_users.arn
 }
 
@@ -191,8 +197,9 @@ data "aws_iam_policy_document" "assume_role_admin_access_group_policy_document" 
 }
 
 resource "aws_iam_group_policy" "assume_role_admin_access_group_policy" {
-  name  = "admin_access_group_policy"
-  group = aws_iam_group.admins.id
+  for_each = toset(local.admin_groups)
+  name     = "admin_access_group_policy"
+  group    = aws_iam_group.groups[each.key].id
 
   policy = data.aws_iam_policy_document.assume_role_admin_access_group_policy_document.json
 }
@@ -212,8 +219,9 @@ data "aws_iam_policy_document" "assume_role_users_access_group_policy_document" 
 }
 
 resource "aws_iam_group_policy" "assume_role_users_access_group_policy" {
-  name  = "users_access_group_policy"
-  group = aws_iam_group.users.id
+  for_each = toset(local.user_groups)
+  name     = "users_access_group_policy"
+  group    = aws_iam_group.groups[each.key].id
 
   policy = data.aws_iam_policy_document.assume_role_users_access_group_policy_document.json
 }

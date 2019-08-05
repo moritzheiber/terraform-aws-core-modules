@@ -7,7 +7,7 @@ This is a collection of Terraform "core" modules I would consider to be building
 - [{{ .Path }}](#{{ .Path }})
 {{- end }}
 {{ range . }}
-{{ $Version := "0.3.8" -}}
+{{ $Version := "0.3.9" -}}
 ## {{ tt .Path }}
 {{ if contains .Path "config" }}
 The module configures AWS Config to monitor your account for non-compliant resources for the following checks:
@@ -64,21 +64,37 @@ A module to configure the "users" account modeled after a common security princi
 
 This is modeled after a strict separation of privilege, as explained in [an article I wrote a while ago](https://www.thoughtworks.com/insights/blog/using-aws-security-first-class-citizen).
 
-Usually you will want to use this module together with [`iam-resources`](#iam-resources) module.
+You can also create IAM users and IAM groups with this module and assign the users to specific groups. The module will create two default groups, one for admins and users, which you can disable by setting the `admin_group_name` and `user_group_name` to an empty string.
+
+Creating additional users is done by passing a map called `users` to the module, with a group mapping attached to them (the best practice is to never have users live "outside" of groups).
+
+_Usually you will want to use this module together with [`iam-resources`](#iam-resources) module._
 
 ### Example
 
 ```terraform
+variable "users" {
+  type = map(map(list(string)))
+  default = {
+    my_user = {
+      groups = ["admins"]
+    }
+  }
+}
+
 module "iam_users" {
   source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-users?ref=v{{- $Version -}}"
   iam_account_alias = "my_unique_alias"
+
+  users = var.users
 }
+
+This will run the module and create all the necessary permissions along with a user belonging to the `admins` groups.
 ```
 {{ else if contains .Path "iam-resources" }}
 A module to configure the "resources" account modeled after a common security principle of separating users from resource accounts through a MFA-enabled role-assumption bridge.
 
 ### Example
-
 ```terraform
 module "iam_resources" {
   source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-resources?ref=v{{- $Version -}}"
