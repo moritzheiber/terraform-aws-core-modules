@@ -148,9 +148,7 @@ resource "aws_iam_user_group_membership" "users_group_memberships" {
   for_each = var.iam_users
   user     = each.key
 
-  groups = [
-    each.value["groups"],
-  ]
+  groups = each.value["groups"]
 }
 
 # Groups
