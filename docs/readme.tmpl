@@ -7,7 +7,7 @@ This is a collection of Terraform "core" modules I would consider to be building
 - [{{ .Path }}](#{{ .Path }})
 {{- end }}
 {{ range . }}
-{{ $Version := "0.3.9" -}}
+{{ $Version := "0.3.10" -}}
 ## {{ tt .Path }}
 {{ if contains .Path "config" }}
 The module configures AWS Config to monitor your account for non-compliant resources for the following checks:
@@ -73,7 +73,7 @@ _Usually you will want to use this module together with [`iam-resources`](#iam-r
 ### Example
 
 ```terraform
-variable "users" {
+variable "iam_users" {
   type = map(map(list(string)))
   default = {
     my_user = {
@@ -86,7 +86,7 @@ module "iam_users" {
   source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-users?ref=v{{- $Version -}}"
   iam_account_alias = "my_unique_alias"
 
-  users = var.users
+  iam_users = var.iam_users
 }
 
 This will run the module and create all the necessary permissions along with a user belonging to the `admins` groups.

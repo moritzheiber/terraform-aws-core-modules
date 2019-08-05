@@ -64,7 +64,7 @@ variable "additional_user_groups" {
 }
 
 variable "iam_users" {
-  type        = map(map(string))
+  type        = map(map(list(string)))
   description = "A list of maps of users and their groups. Default is to create no users."
   default     = {}
 }
