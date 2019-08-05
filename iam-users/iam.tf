@@ -145,6 +145,10 @@ resource "aws_iam_user" "users" {
 }
 
 resource "aws_iam_user_group_membership" "users_group_memberships" {
+  depends_on = [
+    aws_iam_user.users,
+    aws_iam_group.groups
+  ]
   for_each = var.iam_users
   user     = each.key
 

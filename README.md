@@ -137,8 +137,8 @@ This will run the module and create all the necessary permissions along with a u
 ### Output Values
 | Variable | Description |
 |----------|-------------|
-| **``admin_group_name``** | The name of the admin group |
-| **``user_group_name``** | The name of the user group |
+| **``admin_group_names``** | The names of the admin groups |
+| **``user_group_names``** | The name of the user groups |
 ## `iam-resources`
 
 A module to configure the "resources" account modeled after a common security principle of separating users from resource accounts through a MFA-enabled role-assumption bridge.
