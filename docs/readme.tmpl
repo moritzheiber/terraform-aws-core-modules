@@ -7,7 +7,7 @@ This is a collection of Terraform "core" modules I would consider to be building
 - [{{ .Path }}](#{{ .Path }})
 {{- end }}
 {{ range . }}
-{{ $Version := "0.3.13" -}}
+{{ $Version := "0.3.14" -}}
 ## {{ tt .Path }}
 {{ if contains .Path "config" }}
 The module configures AWS Config to monitor your account for non-compliant resources for the following checks:
