@@ -4,8 +4,8 @@ This is a collection of Terraform "core" modules I would consider to be building
 
 ## Available modules
 - [config](#config)
-- [iam-users](#iam-users)
 - [iam-resources](#iam-resources)
+- [iam-users](#iam-users)
 - [vpc](#vpc)
 
 ## `config`
@@ -43,11 +43,11 @@ Some of them can receive extra parameters. See a table reference below.
 
 ### Example
 
-Add the following statement to your `variables.tf` to use the `config` module in version `v0.3.10`:
+Add the following statement to your `variables.tf` to use the `config` module in version `v0.3.13`:
 
 ```terraform
 module "aws_config" {
-  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//config?ref=v0.3.10"
+  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//config?ref=v0.3.13"
 
   # Optional, defaults to "aws-config"
   bucket_prefix = "my-aws-config-bucket"
@@ -79,6 +79,44 @@ and run `terraform init` to download the required module files.
 | **`max_access_key_age`** | string | `"90"` | The maximum amount of days an access key can live without being rotated |
 | **`password_policy`** | map(string) | `{}` | A map of values describing the password policy parameters AWS Config is looking for |
 | **`s3_kms_sse_encryption_key_arn`** | string | `""` | The ARN for the KMS key to use for S3 server-side bucket encryption |
+### Output Values
+| Variable | Description |
+|----------|-------------|
+| **``config_s3_bucket_id``** | The ID of the S3 bucket AWS Config writes its findings into |
+## `iam-resources`
+
+A module to configure the "resources" account modeled after a common security principle of separating users from resource accounts through a MFA-enabled role-assumption bridge.
+
+### Example
+```terraform
+module "iam_resources" {
+  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-resources?ref=v0.3.13"
+  iam_account_alias = "my_unique_alias"
+}
+
+```
+
+### Prerequisites
+* Terraform (`>= 0.12.6`)
+* `aws` provider (`~> 2.20.0`)
+
+### Input Variables
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| **`admin_access_role_name`** | string | `"resource-admin"` | Name of the admin role |
+| **`admin_multi_factor_auth_age`** | string | `"3600"` | The amount of time (in seconds) for a admin session to be valid |
+| **`iam_account_alias`** | string | (required) | A globally unique identifier, human-readable for your AWS account |
+| **`set_iam_account_alias`** | bool | `true` | Whether or not to set the account alias (useful to set to false when iam-users and iam-resources module are being deployed into the same account) |
+| **`user_access_role_name`** | string | `"resource-user"` | Name of the user role |
+| **`user_multi_factor_auth_age`** | string | `"14400"` | The amount of time (in seconds) for a user session to be valid |
+| **`users_account_id`** | string | `""` | The account ID of where the users are living in |
+### Output Values
+| Variable | Description |
+|----------|-------------|
+| **``resource_admin_role_arn``** | The ARN of the role users are able to assume to attain admin privileges |
+| **``resource_admin_role_name``** | The name of the role users are able to assume to attain admin privileges |
+| **``resource_user_role_arn``** | The ARN of the role users are able to assume to attain user privileges |
+| **``resource_user_role_name``** | The name of the role users are able to assume to attain user privileges |
 ## `iam-users`
 
 A module to configure the "users" account modeled after a common security principle of separating users from resource accounts through a MFA-enabled role-assumption bridge:
@@ -106,7 +144,7 @@ variable "iam_users" {
 }
 
 module "iam_users" {
-  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-users?ref=v0.3.10"
+  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-users?ref=v0.3.13"
   iam_account_alias = "my_unique_alias"
 
   iam_users = var.iam_users
@@ -139,40 +177,6 @@ This will run the module and create all the necessary permissions along with a u
 |----------|-------------|
 | **``admin_group_names``** | The names of the admin groups |
 | **``user_group_names``** | The name of the user groups |
-## `iam-resources`
-
-A module to configure the "resources" account modeled after a common security principle of separating users from resource accounts through a MFA-enabled role-assumption bridge.
-
-### Example
-```terraform
-module "iam_resources" {
-  source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-resources?ref=v0.3.10"
-  iam_account_alias = "my_unique_alias"
-}
-
-```
-
-### Prerequisites
-* Terraform (`>= 0.12.6`)
-* `aws` provider (`~> 2.20.0`)
-
-### Input Variables
-| Variable | Type | Default | Description |
-|----------|------|---------|-------------|
-| **`admin_access_role_name`** | string | `"resource-admin"` | Name of the admin role |
-| **`admin_multi_factor_auth_age`** | string | `"3600"` | The amount of time (in seconds) for a admin session to be valid |
-| **`iam_account_alias`** | string | (required) | A globally unique identifier, human-readable for your AWS account |
-| **`set_iam_account_alias`** | bool | `true` | Whether or not to set the account alias (useful to set to false when iam-users and iam-resources module are being deployed into the same account) |
-| **`user_access_role_name`** | string | `"resource-user"` | Name of the user role |
-| **`user_multi_factor_auth_age`** | string | `"14400"` | The amount of time (in seconds) for a user session to be valid |
-| **`users_account_id`** | string | `""` | The account ID of where the users are living in |
-### Output Values
-| Variable | Description |
-|----------|-------------|
-| **``resource_admin_role_arn``** | The ARN of the role users are able to assume to attain admin privileges |
-| **``resource_admin_role_name``** | The name of the role users are able to assume to attain admin privileges |
-| **``resource_user_role_arn``** | The ARN of the role users are able to assume to attain user privileges |
-| **``resource_user_role_name``** | The name of the role users are able to assume to attain user privileges |
 ## `vpc`
 
 The module builds a VPC with the default CIDR range of `10.0.0.0/16`, three subnets a "public" configuration (attached and routed to an AWS Internet Gateway) and three subnets in a "private" configuration (attached and routed through three separate AWS NAT Gateways):
@@ -181,11 +185,11 @@ The module builds a VPC with the default CIDR range of `10.0.0.0/16`, three subn
 
 ### Example
 
-Add the following statement to your `variables.tf` to use the `vpc` module in version `v0.3.10`:
+Add the following statement to your `variables.tf` to use the `vpc` module in version `v0.3.13`:
 
 ```terraform
 module "core_vpc" {
-  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//vpc?ref=v0.3.10"
+  source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//vpc?ref=v0.3.13"
 
   tags = {
     Resource    = "my_team_name"
