@@ -16,22 +16,10 @@ variable "vpc_cidr_range" {
   default     = "10.0.0.0/16"
 }
 
-variable "public_subnet_cidrs" {
-  type        = list(string)
-  description = "A list of CIDRs for the public subnets. Needs to be the same amount as subnets in the Availability Zone you are deploying into (probably 3)"
-  default     = []
-}
-
 variable "public_subnet_size" {
   type        = number
   description = "The size of the public subnet (default: 1022 usable addresses)"
-  default     = "6"
-}
-
-variable "private_subnet_cidrs" {
-  type        = list(string)
-  description = "A list of CIDRs for the private subnets. Needs to be the same amount as subnets in the Availability Zone you are deploying into (probably 3)"
-  default     = []
+  default     = 6
 }
 
 variable "private_subnet_size" {
@@ -43,7 +31,7 @@ variable "private_subnet_size" {
 variable "private_subnet_offset" {
   type        = number
   description = "The amount of IP space between the public and the private subnet"
-  default     = 32
+  default     = 2
 }
 
 variable "public_subnet_prefix" {
@@ -69,15 +57,3 @@ variable "enable_dns_hostnames" {
   description = "Whether or not to enable VPC DNS hostname support"
   default     = true
 }
-
-locals {
-  # We are using locals for this because there already is a fair amount of function calling inside the actual resources
-  public_subnet_prefix  = length(var.public_subnet_prefix) > 0 ? var.public_subnet_prefix : "${var.vpc_name}_public_subnet"
-  private_subnet_prefix = length(var.private_subnet_prefix) > 0 ? var.private_subnet_prefix : "${var.vpc_name}_private_subnet"
-}
-
-provider "aws" {
-  version = "~> 2.20.0"
-}
-
-data "aws_availability_zones" "available" {}
