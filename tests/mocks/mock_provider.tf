@@ -9,5 +9,7 @@ provider "aws" {
 
   endpoints {
     ec2 = "http://localhost:4566"
+    iam = "http://localhost:4566"
+    sts = "http://localhost:4566"
   }
 }

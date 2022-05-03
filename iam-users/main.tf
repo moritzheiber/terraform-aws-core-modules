@@ -1,32 +1,17 @@
-# This is a policy which lets you self-service your own access keys.
-# The only condition is that you have a MFA enabled session
-data "aws_iam_policy_document" "aws_access_key_self_service_policy" {
-  statement {
-    actions = [
-      "iam:CreateAccessKey",
-      "iam:DeleteAccessKey",
-      "iam:ListAccessKeys",
-      "iam:UpdateAccessKey",
-    ]
-
-    effect = "Allow"
-
-    condition {
-      test     = "Bool"
-      variable = "aws:MultiFactorAuthPresent"
-      values   = ["true"]
-    }
-
-    condition {
-      test     = "NumericLessThan"
-      variable = "aws:MultiFactorAuthAge"
-      values   = [var.multi_factor_auth_age]
-    }
-
-    resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/$${aws:username}",
-    ]
-  }
+locals {
+  resources_account_id = length(var.resources_account_id) > 0 ? var.resources_account_id : data.aws_caller_identity.current.account_id
+  password_policy = merge({
+    require_uppercase_characters   = "true"
+    require_lowercase_characters   = "true"
+    require_symbols                = "true"
+    require_numbers                = "true"
+    minimum_password_length        = "32"
+    password_reuse_prevention      = "5"
+    max_password_age               = "90"
+    allow_users_to_change_password = "true"
+  }, var.password_policy)
+  admin_groups = compact(concat([var.admin_group_name], var.additional_admin_groups))
+  user_groups  = compact(concat([var.user_group_name], var.additional_user_groups))
 }
 
 resource "aws_iam_policy" "aws_access_key_self_service" {
@@ -47,83 +32,11 @@ resource "aws_iam_account_password_policy" "strict" {
   allow_users_to_change_password = local.password_policy["allow_users_to_change_password"]
 }
 
-# This allows users without MFA to at least get a few details about their own account
-data "aws_iam_policy_document" "aws_list_iam_users_policy" {
-  statement {
-    effect = "Allow"
-
-    actions = [
-      "iam:GetAccountSummary",
-      "iam:ListAccountAliases",
-      "iam:ListGroupsForUser",
-      "iam:ListUsers",
-    ]
-
-    resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:*",
-    ]
-  }
-
-  statement {
-    actions = ["iam:GetUser"]
-
-    resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/$${aws:username}",
-    ]
-
-    effect = "Allow"
-  }
-}
-
 resource "aws_iam_policy" "aws_list_iam_users" {
   name        = "aws_list_iam_users"
   description = "Let users see the list of users"
 
   policy = data.aws_iam_policy_document.aws_list_iam_users_policy.json
-}
-
-data "aws_iam_policy_document" "aws_mfa_self_service_policy" {
-  statement {
-    effect = "Allow"
-
-    resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/$${aws:username}",
-    ]
-
-    actions = [
-      "iam:DeactivateMFADevice",
-      "iam:EnableMFADevice",
-      "iam:ResyncMFADevice",
-      "iam:ListVirtualMFADevices",
-      "iam:ListMFADevices",
-    ]
-  }
-
-  statement {
-    effect = "Allow"
-
-    resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:mfa/$${aws:username}",
-    ]
-
-    actions = [
-      "iam:CreateVirtualMFADevice",
-      "iam:DeleteVirtualMFADevice",
-    ]
-  }
-
-  statement {
-    effect = "Allow"
-
-    resources = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:mfa/*",
-    ]
-
-    actions = [
-      "iam:ListVirtualMFADevices",
-      "iam:ListMFADevices",
-    ]
-  }
 }
 
 resource "aws_iam_policy" "aws_mfa_self_service" {
@@ -183,41 +96,12 @@ resource "aws_iam_policy_attachment" "users_list_iam_users" {
   policy_arn = aws_iam_policy.aws_list_iam_users.arn
 }
 
-# Group policies
-data "aws_iam_policy_document" "assume_role_admin_access_group_policy_document" {
-  statement {
-    actions = [
-      "sts:AssumeRole",
-    ]
-
-    effect = "Allow"
-
-    resources = [
-      "arn:aws:iam::${local.resources_account_id}:role/${var.resource_admin_role_name}",
-    ]
-  }
-}
-
 resource "aws_iam_group_policy" "assume_role_admin_access_group_policy" {
   for_each = toset(local.admin_groups)
   name     = "admin_access_group_policy"
   group    = aws_iam_group.groups[each.key].id
 
   policy = data.aws_iam_policy_document.assume_role_admin_access_group_policy_document.json
-}
-
-data "aws_iam_policy_document" "assume_role_users_access_group_policy_document" {
-  statement {
-    effect = "Allow"
-
-    actions = [
-      "sts:AssumeRole",
-    ]
-
-    resources = [
-      "arn:aws:iam::${local.resources_account_id}:role/${var.resource_user_role_name}"
-    ]
-  }
 }
 
 resource "aws_iam_group_policy" "assume_role_users_access_group_policy" {
