@@ -40,10 +40,19 @@ variable "delivery_frequency" {
   default     = "Three_Hours"
 }
 
+# see https://docs.aws.amazon.com/config/latest/developerguide/iam-password-policy.html
 variable "password_policy" {
   type        = map(string)
   description = "A map of values describing the password policy parameters AWS Config is looking for"
-  default     = {}
+  default = {
+    require_uppercase_chars   = "true"
+    require_lowercase_chars   = "true"
+    require_symbols           = "true"
+    require_numbers           = "true"
+    minimum_password_length   = "32"
+    password_reuse_prevention = "5"
+    max_password_age          = "90"
+  }
 }
 
 variable "iam_user_groups" {
@@ -61,7 +70,13 @@ variable "max_access_key_age" {
 variable "enable_lifecycle_management_for_s3" {
   type        = bool
   description = "Whether or not to enable lifecycle management for the S3 bucket AWS Config writes to"
-  default     = true
+  default     = false
+}
+
+variable "lifecycle_bucket_expiration" {
+  type        = number
+  description = "The number of days after which artifacts in the Config S3 bucket are expiring"
+  default     = 365
 }
 
 variable "amis_by_tag_key_and_value_list" {
@@ -82,23 +97,44 @@ variable "s3_kms_sse_encryption_key_arn" {
   default     = "" # Use the default master key
 }
 
-locals {
-  config_policy_arn = "arn:aws:iam::aws:policy/service-role/AWSConfigRole"
-  bucket_account_id = length(var.bucket_account_id) > 0 ? var.bucket_account_id : data.aws_caller_identity.current.account_id
-  password_policy = merge({
-    require_uppercase_chars   = "true"
-    require_lowercase_chars   = "true"
-    require_symbols           = "true"
-    require_numbers           = "true"
-    minimum_password_length   = "32"
-    password_reuse_prevention = "5"
-    max_password_age          = "90"
-  }, var.password_policy)
+variable "simple_config_rules" {
+  type        = map(string)
+  description = "A range of simple Config rules that you wish to have applied"
+  default = {
+    INSTANCES_IN_VPC                           = "AWS"
+    EC2_VOLUME_INUSE_CHECK                     = "AWS"
+    EIP_ATTACHED                               = "AWS"
+    ENCRYPTED_VOLUMES                          = "AWS"
+    INCOMING_SSH_DISABLED                      = "AWS"
+    CLOUD_TRAIL_ENABLED                        = "AWS"
+    IAM_GROUP_HAS_USERS_CHECK                  = "AWS"
+    IAM_USER_NO_POLICIES_CHECK                 = "AWS"
+    ROOT_ACCOUNT_MFA_ENABLED                   = "AWS"
+    S3_BUCKET_PUBLIC_READ_PROHIBITED           = "AWS"
+    S3_BUCKET_PUBLIC_WRITE_PROHIBITED          = "AWS"
+    S3_BUCKET_SSL_REQUESTS_ONLY                = "AWS"
+    S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED   = "AWS"
+    S3_BUCKET_VERSIONING_ENABLED               = "AWS"
+    EBS_OPTIMIZED_INSTANCE                     = "AWS"
+    AUTOSCALING_GROUP_ELB_HEALTHCHECK_REQUIRED = "AWS"
+    RDS_INSTANCE_PUBLIC_ACCESS_CHECK           = "AWS"
+    RDS_SNAPSHOTS_PUBLIC_PROHIBITED            = "AWS"
+    IAM_POLICY_NO_STATEMENTS_WITH_ADMIN_ACCESS = "AWS"
+    IAM_ROOT_ACCESS_KEY_CHECK                  = "AWS"
+  }
 }
 
-provider "aws" {
-  version = ">= 2.20.0"
+variable "complex_config_rules" {
+  type        = map(object({ owner = string, input_parameters = any }))
+  description = "A range of more complex Config rules you wish to have applied. They can carry input parameters."
+  default = {
+    CLOUDWATCH_ALARM_ACTION_CHECK = {
+      owner = "AWS"
+      input_parameters = {
+        alarmActionRequired            = "true"
+        insufficientDataActionRequired = "false"
+        okActionRequired               = "false"
+      }
+    }
+  }
 }
-
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
