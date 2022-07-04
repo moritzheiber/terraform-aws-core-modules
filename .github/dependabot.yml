@@ -1,0 +1,38 @@
+version: 2
+updates:
+  - package-ecosystem: "terraform"
+    directory: "/config"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:00"
+  - package-ecosystem: "terraform"
+    directory: "/iam-resources"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:00"
+  - package-ecosystem: "terraform"
+    directory: "/iam-users"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:00"
+  - package-ecosystem: "terraform"
+    directory: "/vpc"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:00"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "09:00"
+  - package-ecosystem: "gomod"
+    directory: "/tests"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "09:00"
