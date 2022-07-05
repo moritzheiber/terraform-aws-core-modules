@@ -9,15 +9,12 @@ import (
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	// "github.com/stretchr/testify/assert"
-
 	// awssdk "github.com/aws/aws-sdk-go/aws"
 )
 
-const allowedRegion = "eu-central-1"
-const terraformDir = "../vpc"
-
 func TestVPCModuleHappyPath(t *testing.T) {
 	t.Parallel()
+	const terraformDir = "../vpc"
 
 	awsRegion := aws.GetRandomStableRegion(t, []string{allowedRegion}, nil)
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
