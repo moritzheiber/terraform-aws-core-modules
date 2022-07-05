@@ -7,4 +7,4 @@ on:
 
 jobs:
   test:
-    uses: moritzheiber/terraform-aws-oidc-github-actions-module/.github/workflows/test.yaml@main
+    uses: moritzheiber/terraform-aws-core-modules/.github/workflows/test.yaml@main
