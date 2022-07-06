@@ -2,12 +2,7 @@ module terraform-aws-core-modules
 
 go 1.17
 
-require (
-	github.com/aws/aws-sdk-go v1.43.21
-	github.com/gruntwork-io/terratest v0.40.1
-	github.com/stretchr/testify v1.7.1
-
-)
+require github.com/gruntwork-io/terratest v0.40.1
 
 require (
 	cloud.google.com/go v0.100.2 // indirect
@@ -16,6 +11,7 @@ require (
 	cloud.google.com/go/storage v1.21.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
+	github.com/aws/aws-sdk-go v1.44.48 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
@@ -46,6 +42,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/pquerna/otp v1.3.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/stretchr/testify v1.7.1 // indirect
 	github.com/tmccombs/hcl2json v0.3.4 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/urfave/cli/v2 v2.4.0 // indirect
