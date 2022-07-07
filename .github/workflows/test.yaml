@@ -22,10 +22,6 @@ jobs:
         run: tflint
   terratest:
     runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: true
-      matrix:
-        directory: [config, iam-resources, iam-users, vpc]
     defaults:
       run:
         working-directory: tests
@@ -40,6 +36,6 @@ jobs:
         with:
           terraform_wrapper: false
       - uses: actions/setup-go@v3
-      - run: cp mocks/mock_provider.tf ../${{ matrix.directory }}/
+      - run: echo ../config ../iam-users ../iam-resources ../vpc | xargs -n 1 cp mocks/mock_provider.tf
       - name: terratest
         run: go test
