@@ -1,54 +1,97 @@
+/**
+* ## Config
+* 
+* The module configures AWS Config to monitor your account for non-compliant resources.
+* You can freely choose which checks to use or discard by modifying the `enable_config_rules`, `disable_config_rules` and `complex_config_rules` variables.
+*
+* As an example, if you'd wish to enable `AUTOSCALING_CAPACITY_REBALANCING` and disable the `INSTANCES_IN_VPC` check, which is enabled by default, you could use the following code:
+*
+* ```hcl
+* module "aws_config" {
+*     source = "git::https://github.com/moritzheiber/terraform-aws-core-modules//config"
+*     
+*     enable_simple_rules = ["AUTOSCALING_CAPACITY_REBALANCING"]
+*     disable_simple_rules = ["INSTANCE_IN_VPC"]
+* }
+* ```
+*
+* If you wanted to change parameters on the `CLOUDWATCH_ALARM_ACTION_CHECK` complex rule you could pass it to the `complex_config_rules` variable:
+*
+* ```hcl
+* module "aws_config" {
+*   source = "git::https://github.com/moritzheiber/terraform-aws-core-modules//config"
+*     
+*   complex_config_rules = {
+*     CLOUDWATCH_ALARM_ACTION_CHECK = {
+*       alarmActionRequired            = "false"
+*       insufficientDataActionRequired = "true"
+*       okActionRequired               = "true"
+*     }
+*   }
+* }
+* ```
+*
+* For a list of available managed rules you can refer [to the AWS Config documentation](https://docs.aws.amazon.com/config/latest/developerguide/managed-rules-by-aws-config.html).
+* As a rule of thumb:
+* - **if they require no parameters** you can use either `enable_config_rules` or `disable_config_rules` to manage them.
+* - **if they require parameters** you can use the `complex_config_rules` map to add them and their input parameters as a `identifier = { parameter = value }` map.
+* 
+* For both cases you need to use their _uppercase, snake case identifier_ (e.g. `autoscaling-capacity-rebalancing` becomes `AUTOSCALING_CAPACITY_REBALANCING`)
+*
+* ### Special cases
+*
+* For a few rules there is special treatment using variables:
+*
+* - `IAM_PASSWORD_POLICY`: See the `password_policy` variable
+* - `IAM_USER_GROUP_MEMBERSHIP_CHECK`: See the `iam_user_groups` variable
+* - `APPROVED_AMIS_BY_TAG`: See the `amis_by_tag_key_and_value_list` variable
+* - `ACCESS_KEYS_ROTATED`: See the `max_access_key_age` variable
+* - `DESIRED_INSTANCE_TYPE`: See the `desired_instance_types` variable (_Note: the identifier says `type` but this is **a list**_)
+*
+* You can disable any of these complex rules by simply unsetting the corresponding variable.
+*/
+
 locals {
   config_policy_arn        = "arn:aws:iam::aws:policy/service-role/AWSConfigRole"
   bucket_account_id        = length(var.bucket_account_id) > 0 ? var.bucket_account_id : data.aws_caller_identity.current.account_id
   aws_config_s3_bucket_arn = var.enable_lifecycle_management_for_s3 ? aws_s3_bucket.config_with_lifecycle[0].arn : aws_s3_bucket.config_without_lifecycle[0].arn
 
+  simple_config_rules = setsubtract(
+    var.enable_config_rules,
+    var.disable_config_rules
+  )
+
   complex_rules_password_policy = {
     IAM_PASSWORD_POLICY = {
-      owner = "AWS"
-      input_parameters = {
-        RequireUppercaseCharacters = var.password_policy["require_uppercase_chars"]
-        RequireLowercaseCharacters = var.password_policy["require_lowercase_chars"]
-        RequireSymbols             = var.password_policy["require_symbols"]
-        RequireNumbers             = var.password_policy["require_numbers"]
-        MinimumPasswordLength      = var.password_policy["minimum_password_length"]
-        PasswordReusePrevention    = var.password_policy["password_reuse_prevention"]
-        MaxPasswordAge             = var.password_policy["max_password_age"]
-      }
+      RequireUppercaseCharacters = var.password_policy["require_uppercase_chars"]
+      RequireLowercaseCharacters = var.password_policy["require_lowercase_chars"]
+      RequireSymbols             = var.password_policy["require_symbols"]
+      RequireNumbers             = var.password_policy["require_numbers"]
+      MinimumPasswordLength      = var.password_policy["minimum_password_length"]
+      PasswordReusePrevention    = var.password_policy["password_reuse_prevention"]
+      MaxPasswordAge             = var.password_policy["max_password_age"]
     }
   }
 
   complex_rules_group_membership = length(var.iam_user_groups) > 0 ? {
-    IAM_USER_GROUP_MEMBERSHIP_CHECK = {
-      owner            = "AWS"
-      input_parameters = var.iam_user_groups
-    }
+    IAM_USER_GROUP_MEMBERSHIP_CHECK = var.iam_user_groups
   } : {}
 
   complex_rules_approved_ami_tags = length(var.amis_by_tag_key_and_value_list) > 0 ? {
     APPROVED_AMIS_BY_TAG = {
-      owner = "AWS"
-      input_parameters = {
-        amisByTagKeyAndValue = var.amis_by_tag_key_and_value_list
-      }
+      amisByTagKeyAndValue = var.amis_by_tag_key_and_value_list
     }
   } : {}
 
   complex_rules_access_key_rotation = length(var.max_access_key_age) > 0 ? {
     ACCESS_KEYS_ROTATED = {
-      owner = "AWS"
-      input_parameters = {
-        maxAccessKeyAge = var.max_access_key_age
-      }
+      maxAccessKeyAge = var.max_access_key_age
     }
   } : {}
 
   complex_rules_desired_instance_type = length(var.desired_instance_types) > 0 ? {
     DESIRED_INSTANCE_TYPE = {
-      owner = "AWS"
-      input_parameters = {
-        maxAccessKeyAge = var.desired_instance_types
-      }
+      maxAccessKeyAge = var.desired_instance_types
     }
   } : {}
 
@@ -194,13 +237,13 @@ resource "aws_config_configuration_recorder_status" "config" {
   depends_on = [aws_config_delivery_channel.config]
 }
 
-# Simple Config rules which just require the identifier and the owner
+# Simple Config rules which just require the identifier of the rule
 resource "aws_config_config_rule" "rule_simple" {
-  for_each = var.simple_config_rules
+  for_each = local.simple_config_rules
   name     = lower(each.key)
 
   source {
-    owner             = each.value
+    owner             = "AWS"
     source_identifier = each.key
   }
 
@@ -213,11 +256,11 @@ resource "aws_config_config_rule" "rule_complex" {
   name     = lower(each.key)
 
   source {
-    owner             = each.value.owner
+    owner             = "AWS"
     source_identifier = each.key
   }
 
-  input_parameters = jsonencode(each.value.input_parameters)
+  input_parameters = jsonencode(each.value)
 
   depends_on = [aws_config_configuration_recorder.config]
 }

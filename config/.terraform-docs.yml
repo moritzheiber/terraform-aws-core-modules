@@ -1,0 +1,33 @@
+version: ">= 0.14.1"
+
+formatter: markdown
+
+header-from: "main.tf"
+footer-from: ""
+
+sections:
+  hide: [providers, modules, resources, data-sources]
+  show: []
+
+content: ""
+
+output:
+  file: "README.md"
+  mode: replace
+
+sort:
+  enabled: true
+  by: required
+
+settings:
+  anchor: true
+  color: true
+  default: true
+  description: false
+  escape: true
+  html: true
+  indent: 2
+  lockfile: true
+  required: true
+  sensitive: true
+  type: true

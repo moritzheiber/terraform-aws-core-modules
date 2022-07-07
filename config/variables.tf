@@ -93,48 +93,51 @@ variable "desired_instance_types" {
 
 variable "s3_kms_sse_encryption_key_arn" {
   type        = string
-  description = "The ARN for the KMS key to use for S3 server-side bucket encryption"
-  default     = "" # Use the default master key
+  description = "The ARN for the KMS key to use for S3 server-side bucket encryption. If none if specified the module creates a KMS key for customer managed encryption."
+  default     = ""
 }
 
-variable "simple_config_rules" {
-  type        = map(string)
-  description = "A range of simple Config rules that you wish to have applied"
-  default = {
-    INSTANCES_IN_VPC                           = "AWS"
-    EC2_VOLUME_INUSE_CHECK                     = "AWS"
-    EIP_ATTACHED                               = "AWS"
-    ENCRYPTED_VOLUMES                          = "AWS"
-    INCOMING_SSH_DISABLED                      = "AWS"
-    CLOUD_TRAIL_ENABLED                        = "AWS"
-    IAM_GROUP_HAS_USERS_CHECK                  = "AWS"
-    IAM_USER_NO_POLICIES_CHECK                 = "AWS"
-    ROOT_ACCOUNT_MFA_ENABLED                   = "AWS"
-    S3_BUCKET_PUBLIC_READ_PROHIBITED           = "AWS"
-    S3_BUCKET_PUBLIC_WRITE_PROHIBITED          = "AWS"
-    S3_BUCKET_SSL_REQUESTS_ONLY                = "AWS"
-    S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED   = "AWS"
-    S3_BUCKET_VERSIONING_ENABLED               = "AWS"
-    EBS_OPTIMIZED_INSTANCE                     = "AWS"
-    AUTOSCALING_GROUP_ELB_HEALTHCHECK_REQUIRED = "AWS"
-    RDS_INSTANCE_PUBLIC_ACCESS_CHECK           = "AWS"
-    RDS_SNAPSHOTS_PUBLIC_PROHIBITED            = "AWS"
-    IAM_POLICY_NO_STATEMENTS_WITH_ADMIN_ACCESS = "AWS"
-    IAM_ROOT_ACCESS_KEY_CHECK                  = "AWS"
-  }
+variable "enable_config_rules" {
+  type        = set(string)
+  description = "A set with simple rules you wish to enable. The defaults are pretty solid. If you wish to only disable a few rules take a look at the 'disable_config_rules' variable."
+  default = [
+    "INSTANCES_IN_VPC",
+    "EC2_VOLUME_INUSE_CHECK",
+    "EIP_ATTACHED",
+    "ENCRYPTED_VOLUMES",
+    "INCOMING_SSH_DISABLED",
+    "CLOUD_TRAIL_ENABLED",
+    "IAM_GROUP_HAS_USERS_CHECK",
+    "IAM_USER_NO_POLICIES_CHECK",
+    "ROOT_ACCOUNT_MFA_ENABLED",
+    "S3_BUCKET_PUBLIC_READ_PROHIBITED",
+    "S3_BUCKET_PUBLIC_WRITE_PROHIBITED",
+    "S3_BUCKET_SSL_REQUESTS_ONLY",
+    "S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED",
+    "S3_BUCKET_VERSIONING_ENABLED",
+    "EBS_OPTIMIZED_INSTANCE",
+    "AUTOSCALING_GROUP_ELB_HEALTHCHECK_REQUIRE",
+    "RDS_INSTANCE_PUBLIC_ACCESS_CHECK",
+    "RDS_SNAPSHOTS_PUBLIC_PROHIBITED",
+    "IAM_POLICY_NO_STATEMENTS_WITH_ADMIN_ACCESS",
+    "IAM_ROOT_ACCESS_KEY_CHECK"
+  ]
+}
+
+variable "disable_config_rules" {
+  type        = set(string)
+  description = "A set with simple rules you wish to disable. Otherwise all the rules are applied by default."
+  default     = []
 }
 
 variable "complex_config_rules" {
   type        = map(object({ owner = string, input_parameters = any }))
-  description = "A range of more complex Config rules you wish to have applied. They can carry input parameters."
+  description = "A range of more complex Config rules you wish to have applied. They usually carry input parameters."
   default = {
     CLOUDWATCH_ALARM_ACTION_CHECK = {
-      owner = "AWS"
-      input_parameters = {
-        alarmActionRequired            = "true"
-        insufficientDataActionRequired = "false"
-        okActionRequired               = "false"
-      }
+      alarmActionRequired            = "true"
+      insufficientDataActionRequired = "false"
+      okActionRequired               = "false"
     }
   }
 }
