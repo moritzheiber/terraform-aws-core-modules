@@ -1,8 +1,7 @@
 locals {
-  config_policy_arn         = "arn:aws:iam::aws:policy/service-role/AWSConfigRole"
-  bucket_account_id         = length(var.bucket_account_id) > 0 ? var.bucket_account_id : data.aws_caller_identity.current.account_id
-  aws_config_s3_bucket_arn  = var.enable_lifecycle_management_for_s3 ? aws_s3_bucket.config_with_lifecycle[0].arn : aws_s3_bucket.config_without_lifecycle[0].arn
-  aws_config_s3_bucket_name = var.enable_lifecycle_management_for_s3 ? aws_s3_bucket.config_with_lifecycle[0].bucket : aws_s3_bucket.config_without_lifecycle[0].bucket
+  config_policy_arn        = "arn:aws:iam::aws:policy/service-role/AWSConfigRole"
+  bucket_account_id        = length(var.bucket_account_id) > 0 ? var.bucket_account_id : data.aws_caller_identity.current.account_id
+  aws_config_s3_bucket_arn = var.enable_lifecycle_management_for_s3 ? aws_s3_bucket.config_with_lifecycle[0].arn : aws_s3_bucket.config_without_lifecycle[0].arn
 
   complex_rules_password_policy = {
     IAM_PASSWORD_POLICY = {
@@ -83,12 +82,21 @@ resource "aws_iam_role_policy_attachment" "allow_s3_access_for_aws_config_attach
   policy_arn = aws_iam_policy.allow_s3_access_for_aws_config_policy.arn
 }
 
+# KMS key for bucket encryption
+resource "aws_kms_key" "s3_bucket_encryption" {
+  description             = "This key is used to encrypt the S3 bucket for AWS Config"
+  deletion_window_in_days = 10
+  enable_key_rotation     = true
+}
+
 # S3 buckets
+# tfsec:ignore:aws-s3-enable-bucket-logging
 resource "aws_s3_bucket" "config_with_lifecycle" {
   count         = var.enable_lifecycle_management_for_s3 ? 1 : 0
   bucket_prefix = var.bucket_prefix
 }
 
+# tfsec:ignore:aws-s3-enable-bucket-logging
 resource "aws_s3_bucket" "config_without_lifecycle" {
   count         = var.enable_lifecycle_management_for_s3 ? 0 : 1
   bucket_prefix = var.bucket_prefix
@@ -96,24 +104,38 @@ resource "aws_s3_bucket" "config_without_lifecycle" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "acl" {
-  bucket = local.aws_config_s3_bucket_name
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_server_side_encryption_configuration" "enforce_encryption" {
-  bucket = local.aws_config_s3_bucket_name
+  bucket = var.enable_lifecycle_management_for_s3 ? aws_s3_bucket.config_with_lifecycle[0].bucket : aws_s3_bucket.config_without_lifecycle[0].bucket
+
 
   rule {
+    bucket_key_enabled = true
+
     apply_server_side_encryption_by_default {
-      kms_master_key_id = var.s3_kms_sse_encryption_key_arn
       sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.s3_bucket_encryption.arn
     }
   }
 }
 
+resource "aws_s3_bucket_public_access_block" "deny_public_access" {
+  bucket = var.enable_lifecycle_management_for_s3 ? aws_s3_bucket.config_with_lifecycle[0].bucket : aws_s3_bucket.config_without_lifecycle[0].bucket
+
+  block_public_acls       = true
+  block_public_policy     = true
+  restrict_public_buckets = true
+  ignore_public_acls      = true
+}
+
+resource "aws_s3_bucket_acl" "acl" {
+  bucket = var.enable_lifecycle_management_for_s3 ? aws_s3_bucket.config_with_lifecycle[0].bucket : aws_s3_bucket.config_without_lifecycle[0].bucket
+
+  acl = "private"
+}
+
 resource "aws_s3_bucket_versioning" "versioning" {
-  bucket = local.aws_config_s3_bucket_name
+  bucket = var.enable_lifecycle_management_for_s3 ? aws_s3_bucket.config_with_lifecycle[0].bucket : aws_s3_bucket.config_without_lifecycle[0].bucket
+
   versioning_configuration {
     status = "Enabled"
   }
@@ -154,8 +176,9 @@ resource "aws_config_configuration_recorder" "config" {
 
 resource "aws_config_delivery_channel" "config" {
   name           = var.config_delivery_channel_name
-  s3_bucket_name = local.aws_config_s3_bucket_name
-  s3_key_prefix  = var.bucket_key_prefix
+  s3_bucket_name = var.enable_lifecycle_management_for_s3 ? aws_s3_bucket.config_with_lifecycle[0].bucket : aws_s3_bucket.config_without_lifecycle[0].bucket
+
+  s3_key_prefix = var.bucket_key_prefix
 
   snapshot_delivery_properties {
     delivery_frequency = var.delivery_frequency

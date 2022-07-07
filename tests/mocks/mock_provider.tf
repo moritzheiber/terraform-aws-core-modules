@@ -13,5 +13,6 @@ provider "aws" {
     sts    = "http://localhost:4566"
     config = "http://localhost:4566"
     s3     = "http://localhost:4566"
+    kms    = "http://localhost:4566"
   }
 }

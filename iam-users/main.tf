@@ -21,6 +21,7 @@ resource "aws_iam_policy" "aws_access_key_self_service" {
   policy = data.aws_iam_policy_document.aws_access_key_self_service_policy.json
 }
 
+#tfsec:ignore:general-secrets-sensitive-in-attribute
 resource "aws_iam_account_password_policy" "strict" {
   minimum_password_length        = local.password_policy["minimum_password_length"]
   max_password_age               = local.password_policy["max_password_age"]

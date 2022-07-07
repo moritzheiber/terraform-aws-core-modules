@@ -106,11 +106,23 @@ data "aws_iam_policy_document" "aws_mfa_self_service_policy" {
 # Group policies
 data "aws_iam_policy_document" "assume_role_admin_access_group_policy_document" {
   statement {
+    effect = "Allow"
+
     actions = [
       "sts:AssumeRole",
     ]
 
-    effect = "Allow"
+    condition {
+      test     = "Bool"
+      variable = "aws:MultiFactorAuthPresent"
+      values   = ["true"]
+    }
+
+    condition {
+      test     = "NumericLessThan"
+      variable = "aws:MultiFactorAuthAge"
+      values   = [var.multi_factor_auth_age]
+    }
 
     resources = [
       "arn:aws:iam::${local.resources_account_id}:role/${var.resource_admin_role_name}",
@@ -126,6 +138,18 @@ data "aws_iam_policy_document" "assume_role_users_access_group_policy_document" 
     actions = [
       "sts:AssumeRole",
     ]
+
+    condition {
+      test     = "Bool"
+      variable = "aws:MultiFactorAuthPresent"
+      values   = ["true"]
+    }
+
+    condition {
+      test     = "NumericLessThan"
+      variable = "aws:MultiFactorAuthAge"
+      values   = [var.multi_factor_auth_age]
+    }
 
     resources = [
       "arn:aws:iam::${local.resources_account_id}:role/${var.resource_user_role_name}"
