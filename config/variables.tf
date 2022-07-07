@@ -116,7 +116,7 @@ variable "enable_config_rules" {
     "S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED",
     "S3_BUCKET_VERSIONING_ENABLED",
     "EBS_OPTIMIZED_INSTANCE",
-    "AUTOSCALING_GROUP_ELB_HEALTHCHECK_REQUIRE",
+    "AUTOSCALING_GROUP_ELB_HEALTHCHECK_REQUIRED",
     "RDS_INSTANCE_PUBLIC_ACCESS_CHECK",
     "RDS_SNAPSHOTS_PUBLIC_PROHIBITED",
     "IAM_POLICY_NO_STATEMENTS_WITH_ADMIN_ACCESS",
@@ -131,7 +131,7 @@ variable "disable_config_rules" {
 }
 
 variable "complex_config_rules" {
-  type        = map(object({ owner = string, input_parameters = any }))
+  type        = map(map(string))
   description = "A range of more complex Config rules you wish to have applied. They usually carry input parameters."
   default = {
     CLOUDWATCH_ALARM_ACTION_CHECK = {
