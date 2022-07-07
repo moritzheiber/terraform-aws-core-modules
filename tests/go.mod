@@ -2,12 +2,7 @@ module terraform-aws-core-modules
 
 go 1.17
 
-require (
-	github.com/aws/aws-sdk-go v1.43.21
-	github.com/gruntwork-io/terratest v0.40.1
-	github.com/stretchr/testify v1.7.1
-
-)
+require github.com/gruntwork-io/terratest v0.40.1
 
 require (
 	cloud.google.com/go v0.100.2 // indirect
@@ -16,6 +11,7 @@ require (
 	cloud.google.com/go/storage v1.21.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
+	github.com/aws/aws-sdk-go v1.43.21 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
@@ -46,6 +42,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/pquerna/otp v1.3.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/stretchr/testify v1.8.0 // indirect
 	github.com/tmccombs/hcl2json v0.3.4 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/urfave/cli/v2 v2.4.0 // indirect
@@ -62,5 +59,5 @@ require (
 	google.golang.org/genproto v0.0.0-20220317150908-0efb43f6373e // indirect
 	google.golang.org/grpc v1.45.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
