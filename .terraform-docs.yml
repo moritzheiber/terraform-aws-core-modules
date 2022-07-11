@@ -1,0 +1,54 @@
+version: ">= 0.14.1"
+
+formatter: markdown
+
+sections:
+  hide: [providers, modules, data-sources]
+  show: []
+
+content: |-
+  # AWS Core Modules
+
+  This is a collection of Terraform "core" modules I would consider to be building blocks of every reasonable AWS account setup.
+  Please refer to to the [AWS Kickstarter](https://github.com/moritzheiber/aws-kickstarter) to see their application.
+
+  Contributions are more than welcome and encouraged!
+
+  ## Available modules
+  - [config](#config)
+  - [iam-resources](#iam-resources)
+  - [iam-users](#iam-users)
+  - [vpc](#vpc)
+
+  {{ include "config/README.md" }}
+
+  {{ include "iam-users/README.md" }}
+
+  {{ include "iam-resources/README.md" }}
+
+  {{ include "vpc/README.md" }}
+
+output:
+  file: "README.md"
+  mode: replace
+
+output-values:
+  enabled: false
+  from: ""
+
+sort:
+  enabled: true
+  by: required
+
+settings:
+  anchor: true
+  color: true
+  default: true
+  description: false
+  escape: true
+  html: true
+  indent: 2
+  lockfile: true
+  required: true
+  sensitive: true
+  type: true

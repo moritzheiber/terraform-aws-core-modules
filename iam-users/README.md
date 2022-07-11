@@ -1,4 +1,3 @@
-<!-- BEGIN_TF_DOCS -->
 
 ## iam-users
 
@@ -61,4 +60,3 @@ This will run the module and create all the necessary permissions along with a u
 |------|-------------|
 | <a name="output_admin_group_names"></a> [admin\_group\_names](#output\_admin\_group\_names) | The names of the admin groups |
 | <a name="output_user_group_names"></a> [user\_group\_names](#output\_user\_group\_names) | The name of the user groups |
-<!-- END_TF_DOCS -->

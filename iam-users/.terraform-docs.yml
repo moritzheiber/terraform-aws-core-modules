@@ -14,6 +14,8 @@ content: ""
 output:
   file: "README.md"
   mode: replace
+  template: |-
+    {{ .Content }}
 
 sort:
   enabled: true

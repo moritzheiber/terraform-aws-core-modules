@@ -2,7 +2,7 @@
 
 set -Eeu -o pipefail
 
-for module in ../config ../iam-users ../iam-resources ../vpc ; do
+for module in ../config ../iam-users ../iam-resources ../vpc ../ ; do
     (
         cd "${module}"
         terraform-docs .

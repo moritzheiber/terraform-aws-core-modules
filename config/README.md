@@ -1,4 +1,3 @@
-<!-- BEGIN_TF_DOCS -->
 ## Config
 
 The module configures AWS Config to monitor your account for non-compliant resources.
@@ -85,4 +84,3 @@ You can disable any of these complex rules by simply unsetting the corresponding
 | Name | Description |
 |------|-------------|
 | <a name="output_config_s3_bucket_arn"></a> [config\_s3\_bucket\_arn](#output\_config\_s3\_bucket\_arn) | The ARN of the S3 bucket AWS Config writes its findings into |
-<!-- END_TF_DOCS -->
