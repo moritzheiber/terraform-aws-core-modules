@@ -1,3 +1,64 @@
+/**
+*
+* ## vpc
+* 
+* This module builds a VPC with the default CIDR range of `10.0.0.0/16`, three subnets in a "public" configuration (attached to and routed through an AWS Internet Gateway) and three subnets in a "private" configuration (attached to and routed through three separate AWS NAT Gateways):
+* 
+* ![AWS VPC illustration](https://raw.githubusercontent.com/moritzheiber/terraform-aws-core-modules/main/files/aws_vpc.png)
+* 
+* ### Usage example
+* 
+* Add the following statement to your `variables.tf` to use the `vpc` module:
+* 
+* ```hcl
+* module "core_vpc" {
+*   source = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//vpc"
+* 
+*   tags = {
+*     Resource    = "my_team_name"
+*     Cost_Center = "my_billing_tag"
+*   }
+* }
+* ```
+* 
+* and run `terraform init` to download the required module files.
+* 
+* **All created subnets will have a tag attached to them which specifies their scope** (i.e. "public" for public subnets and "private" for private subnets) which you can use to filter for the right networks using Terraform data sources:
+* 
+* ```hcl
+* data "aws_vpc" "core" {
+* tags = {
+*     # `core_vpc` is the default, the variable is `vpc_name`
+*     Name = "core_vpc"
+*   }
+* }
+* 
+* data "aws_subnets" "public" {
+*   filter {
+*     name   = "vpc-id"
+*     values = [data.aws_vpc.core.id]
+*   }
+* 
+*   tags = {
+*     Scope = "Public"
+*   }
+* }
+* 
+* data "aws_subnets" "public" {
+*   filter {
+*     name   = "vpc-id"
+*     values = [data.aws_vpc.core.id]
+*   }
+* 
+*   tags = {
+*     Scope = "Private"
+*   }
+* }
+* ```
+* 
+* The result is a list of subnet IDs, either in the public or private VPC zone, you can use to create other resources such as Load Balancers or AutoScalingGroups.
+*
+*/
 
 locals {
   public_subnet_prefix         = length(var.public_subnet_prefix) > 0 ? var.public_subnet_prefix : "${var.vpc_name}_public_subnet"
