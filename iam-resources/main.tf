@@ -1,3 +1,24 @@
+/**
+*
+* ## iam-resources
+*
+* A module to configure the "resources" account modelled after the common security principle of separating users from resource accounts through a MFA-enabled role-assumption bridge.
+* Please see the [iam-users](https://github.com/moritzheiber/terraform-aws-core-modules/tree/main/iam-users) module for further explanation.
+* 
+* ### Usage example
+* ```terraform
+* module "iam_resources" {
+*   source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-resources"
+*   iam_account_alias = "my-unique-alias"
+*   users_account_id = "id-of-the-users-account"
+* }
+* 
+* ```
+* 
+* It is generally assumed that this module isn't deployed on its own. It also contains an example role for EC2 access which disables access to any VPC endpoints for "regular" users as a precaution.
+* 
+*/
+
 locals {
   administrator_access_policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
   iam_read_only_access_policy_arn = "arn:aws:iam::aws:policy/IAMReadOnlyAccess"
