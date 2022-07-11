@@ -1,3 +1,37 @@
+/**
+*
+* ## iam-users
+*
+* A module to configure the "users" account modeled after a common security principle of separating users from resource accounts through a MFA-enabled role-assumption bridge:
+* 
+* ![AWS IAM setup illustration](https://raw.githubusercontent.com/moritzheiber/terraform-aws-core-modules/main/files/aws_iam_setup.png)
+* 
+* These strict separation of privileges follow [an article I wrote a while ago](https://www.thoughtworks.com/insights/blog/using-aws-security-first-class-citizen).
+* You can also create IAM users and IAM groups with this module and assign the users to specific groups. The module will create two default groups, one for admins and users, which you can disable by setting the `admin_group_name` and `user_group_name` to an empty string.
+* 
+* Creating additional users is done by passing a map called `users` to the module, with a group mapping attached to them (the best practice is to never have users live "outside" of groups).
+*
+* ```terraform
+* variable "iam_users" {
+*   type = map(map(set(string)))
+*   default = {
+*     my_user = {
+*       groups = ["admins"]
+*     }
+*   }
+* }
+* 
+* module "iam_users" {
+*   source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-users"
+*
+*   iam_account_alias = "my_unique_alias"
+*   iam_users = var.iam_users
+* }
+* 
+* This will run the module and create all the necessary permissions along with a user belonging to the `admins` groups.
+*
+*/
+
 locals {
   resources_account_id = length(var.resources_account_id) > 0 ? var.resources_account_id : data.aws_caller_identity.current.account_id
   password_policy = merge({

@@ -55,6 +55,7 @@ locals {
   config_policy_arn        = "arn:aws:iam::aws:policy/service-role/AWSConfigRole"
   bucket_account_id        = length(var.bucket_account_id) > 0 ? var.bucket_account_id : data.aws_caller_identity.current.account_id
   aws_config_s3_bucket_arn = var.enable_lifecycle_management_for_s3 ? aws_s3_bucket.config_with_lifecycle[0].arn : aws_s3_bucket.config_without_lifecycle[0].arn
+  kms_key_arn              = length(var.s3_kms_sse_encryption_key_arn) > 0 ? var.s3_kms_sse_encryption_key_arn : aws_kms_key.s3_bucket_encryption[0].arn
 
   simple_config_rules = setsubtract(
     var.enable_config_rules,
@@ -127,6 +128,8 @@ resource "aws_iam_role_policy_attachment" "allow_s3_access_for_aws_config_attach
 
 # KMS key for bucket encryption
 resource "aws_kms_key" "s3_bucket_encryption" {
+  count = length(var.s3_kms_sse_encryption_key_arn) > 0 ? 0 : 1
+
   description             = "This key is used to encrypt the S3 bucket for AWS Config"
   deletion_window_in_days = 10
   enable_key_rotation     = true
@@ -156,7 +159,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "enforce_encryptio
 
     apply_server_side_encryption_by_default {
       sse_algorithm     = "aws:kms"
-      kms_master_key_id = aws_kms_key.s3_bucket_encryption.arn
+      kms_master_key_id = local.kms_key_arn
     }
   }
 }

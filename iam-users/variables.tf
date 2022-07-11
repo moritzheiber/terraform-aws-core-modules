@@ -18,7 +18,15 @@ variable "multi_factor_auth_age" {
 variable "password_policy" {
   type        = map(string)
   description = "A map of password policy parameters you want to set differently from the defaults"
-  default     = {}
+  default = {
+    require_uppercase_chars   = "true"
+    require_lowercase_chars   = "true"
+    require_symbols           = "true"
+    require_numbers           = "true"
+    minimum_password_length   = "32"
+    password_reuse_prevention = "5"
+    max_password_age          = "90"
+  }
 }
 
 variable "resources_account_id" {
