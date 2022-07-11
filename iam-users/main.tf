@@ -11,7 +11,7 @@
 * 
 * Creating additional users is done by passing a map called `users` to the module, with a group mapping attached to them (the best practice is to never have users live "outside" of groups).
 *
-* ```terraform
+* ```hcl
 * variable "iam_users" {
 *   type = map(map(set(string)))
 *   default = {
@@ -27,6 +27,7 @@
 *   iam_account_alias = "my_unique_alias"
 *   iam_users = var.iam_users
 * }
+* ```
 * 
 * This will run the module and create all the necessary permissions along with a user belonging to the `admins` groups.
 *

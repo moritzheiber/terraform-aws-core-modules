@@ -6,7 +6,7 @@
 * Please see the [iam-users](https://github.com/moritzheiber/terraform-aws-core-modules/tree/main/iam-users) module for further explanation.
 * 
 * ### Usage example
-* ```terraform
+* ```hcl
 * module "iam_resources" {
 *   source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-resources"
 *   iam_account_alias = "my-unique-alias"

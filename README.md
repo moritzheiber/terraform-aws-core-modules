@@ -111,7 +111,7 @@ You can also create IAM users and IAM groups with this module and assign the use
 
 Creating additional users is done by passing a map called `users` to the module, with a group mapping attached to them (the best practice is to never have users live "outside" of groups).
 
-```terraform
+```hcl
 variable "iam_users" {
   type = map(map(set(string)))
   default = {
@@ -127,9 +127,9 @@ module "iam_users" {
   iam_account_alias = "my_unique_alias"
   iam_users = var.iam_users
 }
+```
 
 This will run the module and create all the necessary permissions along with a user belonging to the `admins` groups.
-```
 
 ## Requirements
 
@@ -169,7 +169,7 @@ A module to configure the "resources" account modelled after the common security
 Please see the [iam-users](https://github.com/moritzheiber/terraform-aws-core-modules/tree/main/iam-users) module for further explanation.
 
 ### Usage example
-```terraform
+```hcl
 module "iam_resources" {
   source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-resources"
   iam_account_alias = "my-unique-alias"
