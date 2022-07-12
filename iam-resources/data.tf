@@ -18,7 +18,7 @@ data "aws_iam_policy_document" "admin_access_role_policy" {
     condition {
       test     = "NumericLessThan"
       variable = "aws:MultiFactorAuthAge"
-      values   = [var.admin_multi_factor_auth_age]
+      values   = [local.admin_multi_factor_auth_age]
     }
 
     principals {
@@ -48,7 +48,7 @@ data "aws_iam_policy_document" "user_access_role_policy" {
     condition {
       test     = "NumericLessThan"
       variable = "aws:MultiFactorAuthAge"
-      values   = [var.user_multi_factor_auth_age]
+      values   = [local.user_multi_factor_auth_age]
     }
 
     principals {
@@ -74,72 +74,5 @@ data "aws_iam_policy_document" "user_access_policy_document" {
       aws_iam_role.user_access_role.arn,
       aws_iam_role.admin_access_role.arn
     ]
-  }
-}
-
-# This policy basically denies any access to EC2 infrastructure for entities its assigned to
-data "aws_iam_policy_document" "no_vpc_access_policy_document" {
-  statement {
-    effect = "Deny"
-
-    actions = [
-      "ec2:AcceptVpcPeeringConnection",
-      "ec2:AssociateDhcpOptions",
-      "ec2:AssociateRouteTable",
-      "ec2:AttachClassicLinkVpc",
-      "ec2:AttachInternetGateway",
-      "ec2:AttachVpnGateway",
-      "ec2:CreateCustomerGateway",
-      "ec2:CreateDhcpOptions",
-      "ec2:CreateFlowLogs",
-      "ec2:CreateInternetGateway",
-      "ec2:CreateNatGateway",
-      "ec2:CreateNetworkAcl",
-      "ec2:CreateNetworkAclEntry",
-      "ec2:CreateRoute",
-      "ec2:CreateRouteTable",
-      "ec2:CreateSubnet",
-      "ec2:CreateVpc",
-      "ec2:CreateVpcPeeringConnection",
-      "ec2:CreateVpnConnection",
-      "ec2:CreateVpnConnectionRoute",
-      "ec2:CreateVpnGateway",
-      "ec2:DeleteCustomerGateway",
-      "ec2:DeleteDhcpOptions",
-      "ec2:DeleteInternetGateway",
-      "ec2:DeleteNatGateway",
-      "ec2:DeleteNetworkAcl",
-      "ec2:DeleteNetworkAclEntry",
-      "ec2:DeleteRoute",
-      "ec2:DeleteRouteTable",
-      "ec2:DeleteSubnet",
-      "ec2:DeleteVpc",
-      "ec2:DeleteVpnConnection",
-      "ec2:DeleteVpnConnectionRoute",
-      "ec2:DeleteVpnGateway",
-      "ec2:DetachClassicLinkVpc",
-      "ec2:DetachInternetGateway",
-      "ec2:DetachVpnGateway",
-      "ec2:DisableVgwRoutePropagation",
-      "ec2:DisableVpcClassicLink",
-      "ec2:DisableVpcClassicLinkDnsSupport",
-      "ec2:DisassociateRouteTable",
-      "ec2:EnableVgwRoutePropagation",
-      "ec2:EnableVpcClassicLink",
-      "ec2:EnableVpcClassicLinkDnsSupport",
-      "ec2:ModifySubnetAttribute",
-      "ec2:ModifyVpcAttribute",
-      "ec2:ModifyVpcEndpoint",
-      "ec2:ModifyVpcPeeringConnectionOptions",
-      "ec2:MoveAddressToVpc",
-      "ec2:RejectVpcPeeringConnection",
-      "ec2:ReplaceNetworkAclAssociation",
-      "ec2:ReplaceNetworkAclEntry",
-      "ec2:ReplaceRoute",
-      "ec2:ReplaceRouteTableAssociation",
-      "ec2:RestoreAddressToClassic",
-    ]
-
-    resources = ["*"]
   }
 }
