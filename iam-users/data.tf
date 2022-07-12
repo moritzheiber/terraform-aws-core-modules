@@ -22,7 +22,7 @@ data "aws_iam_policy_document" "aws_access_key_self_service_policy" {
     condition {
       test     = "NumericLessThan"
       variable = "aws:MultiFactorAuthAge"
-      values   = [var.multi_factor_auth_age]
+      values   = [local.user_multi_factor_auth_age]
     }
 
     resources = [
@@ -121,7 +121,7 @@ data "aws_iam_policy_document" "assume_role_admin_access_group_policy_document" 
     condition {
       test     = "NumericLessThan"
       variable = "aws:MultiFactorAuthAge"
-      values   = [var.multi_factor_auth_age]
+      values   = [local.admin_multi_factor_auth_age]
     }
 
     resources = [
@@ -148,7 +148,7 @@ data "aws_iam_policy_document" "assume_role_users_access_group_policy_document" 
     condition {
       test     = "NumericLessThan"
       variable = "aws:MultiFactorAuthAge"
-      values   = [var.multi_factor_auth_age]
+      values   = [local.user_multi_factor_auth_age]
     }
 
     resources = [

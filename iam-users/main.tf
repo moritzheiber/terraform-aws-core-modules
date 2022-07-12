@@ -24,7 +24,6 @@
 * module "iam_users" {
 *   source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-users"
 *
-*   iam_account_alias = "my_unique_alias"
 *   iam_users = var.iam_users
 * }
 * ```
@@ -34,7 +33,7 @@
 */
 
 locals {
-  resources_account_id = length(var.resources_account_id) > 0 ? var.resources_account_id : data.aws_caller_identity.current.account_id
+  resources_account_id = var.resources_account_id == null ? data.aws_caller_identity.current.account_id : var.resources_account_id
   password_policy = merge({
     require_uppercase_characters   = "true"
     require_lowercase_characters   = "true"
@@ -45,8 +44,10 @@ locals {
     max_password_age               = "90"
     allow_users_to_change_password = "true"
   }, var.password_policy)
-  admin_groups = compact(concat([var.admin_group_name], var.additional_admin_groups))
-  user_groups  = compact(concat([var.user_group_name], var.additional_user_groups))
+  admin_groups                = compact(concat([var.admin_group_name], var.additional_admin_groups))
+  user_groups                 = compact(concat([var.user_group_name], var.additional_user_groups))
+  user_multi_factor_auth_age  = var.user_multi_factor_auth_age * 60
+  admin_multi_factor_auth_age = var.admin_multi_factor_auth_age * 60
 }
 
 resource "aws_iam_policy" "aws_access_key_self_service" {
@@ -83,7 +84,7 @@ resource "aws_iam_policy" "aws_mfa_self_service" {
 }
 
 resource "aws_iam_account_alias" "iam_account_alias" {
-  count         = var.set_iam_account_alias ? 1 : 0
+  count         = var.iam_account_alias == null ? 0 : 1
   account_alias = var.iam_account_alias
 }
 

@@ -23,7 +23,6 @@ variable "iam_users" {
 module "iam_users" {
   source            = "git::https://github.com/moritzheiber/terraform-aws-core-modules.git//iam-users"
 
-  iam_account_alias = "my_unique_alias"
   iam_users = var.iam_users
 }
 ```
@@ -41,18 +40,18 @@ This will run the module and create all the necessary permissions along with a u
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_iam_account_alias"></a> [iam\_account\_alias](#input\_iam\_account\_alias) | A globally unique, human-readable identifier for your AWS account | `string` | n/a | yes |
 | <a name="input_additional_admin_groups"></a> [additional\_admin\_groups](#input\_additional\_admin\_groups) | A list of additional groups to create associated with administrative privileges | `list(string)` | `[]` | no |
 | <a name="input_additional_user_groups"></a> [additional\_user\_groups](#input\_additional\_user\_groups) | A list of additional groups to create associated with regular users | `list(string)` | `[]` | no |
 | <a name="input_admin_group_name"></a> [admin\_group\_name](#input\_admin\_group\_name) | The name of the initial group created for administrators | `string` | `"admins"` | no |
+| <a name="input_admin_multi_factor_auth_age"></a> [admin\_multi\_factor\_auth\_age](#input\_admin\_multi\_factor\_auth\_age) | The amount of time (in minutes) for a admin session to be valid | `number` | `60` | no |
+| <a name="input_iam_account_alias"></a> [iam\_account\_alias](#input\_iam\_account\_alias) | A globally unique, human-readable identifier for your AWS account | `string` | `null` | no |
 | <a name="input_iam_users"></a> [iam\_users](#input\_iam\_users) | A list of maps of users and their groups. Default is to create no users. | `map(map(list(string)))` | `{}` | no |
-| <a name="input_multi_factor_auth_age"></a> [multi\_factor\_auth\_age](#input\_multi\_factor\_auth\_age) | The amount of time (in seconds) for a user session to be valid | `string` | `"14400"` | no |
 | <a name="input_password_policy"></a> [password\_policy](#input\_password\_policy) | A map of password policy parameters you want to set differently from the defaults | `map(string)` | <pre>{<br>  "max_password_age": "90",<br>  "minimum_password_length": "32",<br>  "password_reuse_prevention": "5",<br>  "require_lowercase_chars": "true",<br>  "require_numbers": "true",<br>  "require_symbols": "true",<br>  "require_uppercase_chars": "true"<br>}</pre> | no |
 | <a name="input_resource_admin_role_name"></a> [resource\_admin\_role\_name](#input\_resource\_admin\_role\_name) | The name of the administrator role one is supposed to assume in the resource account | `string` | `"resource-admin"` | no |
 | <a name="input_resource_user_role_name"></a> [resource\_user\_role\_name](#input\_resource\_user\_role\_name) | The name of the user role one is supposed to assume in the resource account | `string` | `"resource-user"` | no |
 | <a name="input_resources_account_id"></a> [resources\_account\_id](#input\_resources\_account\_id) | The account ID of the AWS account you want to start resources in | `string` | `""` | no |
-| <a name="input_set_iam_account_alias"></a> [set\_iam\_account\_alias](#input\_set\_iam\_account\_alias) | Whether or not to set the account alias (useful to set to false when iam-users and iam-resources module are being deployed into the same account) | `bool` | `true` | no |
 | <a name="input_user_group_name"></a> [user\_group\_name](#input\_user\_group\_name) | The name of the initial group created for users | `string` | `"users"` | no |
+| <a name="input_user_multi_factor_auth_age"></a> [user\_multi\_factor\_auth\_age](#input\_user\_multi\_factor\_auth\_age) | The amount of time (in minutes) for a user session to be valid | `number` | `240` | no |
 
 ## Outputs
 

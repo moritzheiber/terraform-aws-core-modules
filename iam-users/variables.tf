@@ -1,18 +1,19 @@
 variable "iam_account_alias" {
   type        = string
   description = "A globally unique, human-readable identifier for your AWS account"
+  default     = null
 }
 
-variable "set_iam_account_alias" {
-  type        = bool
-  description = "Whether or not to set the account alias (useful to set to false when iam-users and iam-resources module are being deployed into the same account)"
-  default     = true
+variable "admin_multi_factor_auth_age" {
+  type        = number
+  description = "The amount of time (in minutes) for a admin session to be valid"
+  default     = 60 # 1 hour
 }
 
-variable "multi_factor_auth_age" {
-  type        = string
-  description = "The amount of time (in seconds) for a user session to be valid"
-  default     = "14400"
+variable "user_multi_factor_auth_age" {
+  type        = number
+  description = "The amount of time (in minutes) for a user session to be valid"
+  default     = 240 # 4 hours
 }
 
 variable "password_policy" {
