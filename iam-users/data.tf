@@ -43,6 +43,8 @@ data "aws_iam_policy_document" "aws_list_iam_users_policy" {
       "iam:ListUsers",
     ]
 
+    # We need to use * here since the API calls for these don't accept resources
+    #tfsec:ignore:aws-iam-no-policy-wildcards
     resources = [
       "*",
     ]
