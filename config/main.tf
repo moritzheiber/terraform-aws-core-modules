@@ -52,10 +52,11 @@
 */
 
 locals {
-  config_policy_arn        = "arn:aws:iam::aws:policy/service-role/AWSConfigRole"
-  bucket_account_id        = length(var.bucket_account_id) > 0 ? var.bucket_account_id : data.aws_caller_identity.current.account_id
-  aws_config_s3_bucket_arn = var.enable_lifecycle_management_for_s3 ? aws_s3_bucket.config_with_lifecycle[0].arn : aws_s3_bucket.config_without_lifecycle[0].arn
-  kms_key_arn              = length(var.s3_kms_sse_encryption_key_arn) > 0 ? var.s3_kms_sse_encryption_key_arn : aws_kms_key.s3_bucket_encryption[0].arn
+  config_policy_arn         = "arn:aws:iam::aws:policy/service-role/AWSConfigRole"
+  bucket_account_id         = length(var.bucket_account_id) > 0 ? var.bucket_account_id : data.aws_caller_identity.current.account_id
+  aws_config_s3_bucket_arn  = var.enable_lifecycle_management_for_s3 ? aws_s3_bucket.config_with_lifecycle[0].arn : aws_s3_bucket.config_without_lifecycle[0].arn
+  aws_config_s3_bucket_name = var.enable_lifecycle_management_for_s3 ? aws_s3_bucket.config_with_lifecycle[0].bucket : aws_s3_bucket.config_without_lifecycle[0].bucket
+  kms_key_arn               = length(var.s3_kms_sse_encryption_key_arn) > 0 ? var.s3_kms_sse_encryption_key_arn : aws_kms_key.s3_bucket_encryption[0].arn
 
   simple_config_rules = setsubtract(
     var.enable_config_rules,
@@ -151,7 +152,7 @@ resource "aws_s3_bucket" "config_without_lifecycle" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "enforce_encryption" {
-  bucket = var.enable_lifecycle_management_for_s3 ? aws_s3_bucket.config_with_lifecycle[0].bucket : aws_s3_bucket.config_without_lifecycle[0].bucket
+  bucket = local.aws_config_s3_bucket_name
 
 
   rule {
@@ -165,7 +166,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "enforce_encryptio
 }
 
 resource "aws_s3_bucket_public_access_block" "deny_public_access" {
-  bucket = var.enable_lifecycle_management_for_s3 ? aws_s3_bucket.config_with_lifecycle[0].bucket : aws_s3_bucket.config_without_lifecycle[0].bucket
+  bucket = local.aws_config_s3_bucket_name
 
   block_public_acls       = true
   block_public_policy     = true
@@ -174,13 +175,13 @@ resource "aws_s3_bucket_public_access_block" "deny_public_access" {
 }
 
 resource "aws_s3_bucket_acl" "acl" {
-  bucket = var.enable_lifecycle_management_for_s3 ? aws_s3_bucket.config_with_lifecycle[0].bucket : aws_s3_bucket.config_without_lifecycle[0].bucket
+  bucket = local.aws_config_s3_bucket_name
 
   acl = "private"
 }
 
 resource "aws_s3_bucket_versioning" "versioning" {
-  bucket = var.enable_lifecycle_management_for_s3 ? aws_s3_bucket.config_with_lifecycle[0].bucket : aws_s3_bucket.config_without_lifecycle[0].bucket
+  bucket = local.aws_config_s3_bucket_name
 
   versioning_configuration {
     status = "Enabled"
